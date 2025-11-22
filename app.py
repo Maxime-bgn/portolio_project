@@ -15,7 +15,7 @@ from portfolio_module.portfolio_core import (
     create_equal_weights, normalize_weights, portfolio_value,
     correlation_matrix, analyze_portfolio, DEFAULT_ASSETS
 )
-from quant_b.components import (
+from portfolio_module.components import (
     COLORS, CARD_STYLE, create_portfolio_metrics_card,
     create_main_chart, create_correlation_heatmap, create_weights_pie_chart
 )
