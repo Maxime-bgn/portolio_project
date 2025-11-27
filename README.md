@@ -1,77 +1,92 @@
-# portolio_project
+# Portfolio Project
 
-portfolio_project
+A univariate backtesting engine for testing quantitative trading strategies on single assets. This project includes data retrieval, signal generation, portfolio simulation, and performance metrics calculation.
 
-Ce projet est un moteur de backtesting univarié permettant de tester des stratégies quantitatives sur un seul actif. Il inclut la récupération des données, la génération de signaux, la simulation du portefeuille et le calcul des métriques de performance.
+---
 
-1. Fonctionnalités
+## Features
 
-Récupération automatique des données de marché
+- **Automated Market Data Retrieval** — Fetch historical price data seamlessly
+- **Signal Construction** — Built-in support for momentum, breakout, moving averages, and more
+- **Position Generation** — Automatic trade signal conversion to portfolio positions
+- **PnL Simulation & Equity Curve** — Track portfolio value over time
+- **Performance Metrics** — Calculate Sharpe ratio, maximum drawdown, annualized volatility, and CAGR
+- **Modular Architecture** — Clean separation between utilities, core logic, and components
 
-Construction des signaux (momentum, breakout, moyennes mobiles, etc.)
+---
 
-Génération des positions
-
-Simulation PnL et equity curve
-
-Calcul des principales métriques : Sharpe, drawdown, volatilité annuelle, CAGR
-
-Architecture modulaire (utils, core, components)
-
-2. Structure du projet
+## Project Structure
+```
 portfolio_project/
 │
-├── app.py                          # Script principal
-│
+├── app.py                      # Main execution script
 ├── portfolio_module/
-│   ├── portfolio_core.py           # Logique du backtest
-│   ├── components.py               # Fonctions génériques
-│
+│   ├── portfolio_core.py       # Backtesting engine logic
+│   └── components.py           # Generic utility functions
 ├── utils/
-│   ├── data_fetcher.py             # Gestion des données
-│   ├── __init__.py
-│
-└── README.md
+│   ├── data_fetcher.py         # Data management and retrieval
+│   └── __init__.py
+├── requirements.txt            # Python dependencies
+└── README.md                   # Project documentation
+```
 
-3. Installation
+---
 
-Cloner le projet :
+## Installation
 
-git clone https://github.com/<username>/portfolio_project.git
+Clone the repository:
+```bash
+git clone https://github.com/username/portfolio_project.git
 cd portfolio_project
+```
 
-
-Installer les dépendances :
-
+Install dependencies:
+```bash
 pip install -r requirements.txt
+```
 
-4. Exécution du projet
-Méthode 1 : Exécuter le script principal
+---
+
+## Usage
+
+### Run the Main Script
+
+Execute the complete backtesting workflow with predefined parameters:
+```bash
 python app.py
+```
 
+This script runs a full backtest using the configuration defined in `app.py`.
 
-Ce script exécute un backtest complet avec les paramètres définis dans app.py.
+---
 
+## Customization
 
+Modify backtesting parameters in the following files:
 
-5. Personnalisation
+- **`app.py`** — Main execution parameters
+- **`portfolio_module/portfolio_core.py`** — Core backtesting engine logic
+- **`utils/data_fetcher.py`** — Data source configuration
 
-Les paramètres de backtest peuvent être modifiés dans :
+---
 
-app.py pour l’exécution directe
+## Roadmap
 
-portfolio_module/portfolio_core.py pour ajuster la logique du moteur
+Future enhancements planned for this project:
 
-utils/data_fetcher.py pour changer la source de données
+- Multi-asset portfolio support
+- Streamlit web interface
+- Automated hyperparameter optimization
+- Transaction costs and slippage modeling
 
-6. Prochaines évolutions
+---
 
-Support multi-actifs
+## License
 
-Interface Streamlit
+This project is open source and available under the MIT License.
 
-Optimisation automatique des hyperparamètres
+---
 
-Ajout des frais de transaction et slippage
+## Contributing
 
-Si tu veux une version plus concise, ou une version plus "professionnelle GitHub", je peux te la faire aussi.
+Contributions are welcome. Please open an issue or submit a pull request for any improvements or bug fixes.
