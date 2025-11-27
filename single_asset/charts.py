@@ -25,6 +25,108 @@ def plot_price(data: pd.DataFrame):
     return fig
 
 
+def plot_strategy_normalized(data: pd.DataFrame, result: pd.DataFrame, 
+                            ticker: str, strategy_name: str,
+                            colors: dict = None, display_mode: str = "base100"):
+    """
+    Graphique normalisé : Prix vs Stratégie.
+    
+    Args:
+        data: DataFrame des prix (avec colonne 'Close')
+        result: DataFrame du résultat de la stratégie (avec 'portfolio_value')
+        ticker: Nom du ticker
+        strategy_name: Nom de la stratégie
+        colors: Dict avec 'blue', 'green', 'card', 'text'
+        display_mode: "base100" ou "returns" (rendements cumulés en %)
+    
+    Returns:
+        Figure Plotly
+    """
+    if colors is None:
+        colors = {
+            "blue": "#00d4ff",
+            "green": "#00ff88",
+            "card": "#1a1a1a",
+            "text": "#ffffff"
+        }
+    
+    # Calcul selon le mode d'affichage
+    if display_mode == "base100":
+        # Normalisation à base 100
+        price_values = (data['Close'] / data['Close'].iloc[0]) * 100
+        portfolio_values = (result['portfolio_value'] / result['portfolio_value'].iloc[0]) * 100
+        yaxis_title = "Performance (Base 100)"
+        reference_line = 100
+        reference_text = "Point de départ (100)"
+        value_format = ":.2f"
+    else:  # returns
+        # Rendements cumulés en %
+        price_values = ((data['Close'] / data['Close'].iloc[0]) - 1) * 100
+        portfolio_values = ((result['portfolio_value'] / result['portfolio_value'].iloc[0]) - 1) * 100
+        yaxis_title = "Rendement Cumulé (%)"
+        reference_line = 0
+        reference_text = "Rendement nul (0%)"
+        value_format = ":+.2f"
+    
+    fig = go.Figure()
+    
+    # Courbe Buy & Hold
+    fig.add_trace(go.Scatter(
+        x=data.index,
+        y=price_values,
+        name=f"Buy & Hold {ticker}",
+        line=dict(color=colors["blue"], width=2.5),
+        hovertemplate=f'<b>Buy & Hold</b><br>Valeur: %{{y{value_format}}}<extra></extra>'
+    ))
+    
+    # Courbe Stratégie
+    fig.add_trace(go.Scatter(
+        x=result.index,
+        y=portfolio_values,
+        name=f"Stratégie: {strategy_name}",
+        line=dict(color=colors["green"], width=2.5),
+        fill='tonexty',
+        fillcolor='rgba(0, 255, 136, 0.1)',
+        hovertemplate=f'<b>Stratégie</b><br>Valeur: %{{y{value_format}}}<extra></extra>'
+    ))
+    
+    # Ligne de référence
+    fig.add_hline(
+        y=reference_line, 
+        line_dash="dash", 
+        line_color="white", 
+        opacity=0.3,
+        annotation_text=reference_text,
+        annotation_position="right"
+    )
+    
+    fig.update_layout(
+        template="plotly_dark",
+        paper_bgcolor=colors["card"],
+        plot_bgcolor=colors["card"],
+        hovermode="x unified",
+        legend=dict(
+            orientation="h",
+            yanchor="bottom",
+            y=1.02,
+            xanchor="center",
+            x=0.5
+        ),
+        yaxis=dict(
+            title=yaxis_title,
+            color=colors["text"],
+            gridcolor='rgba(255,255,255,0.1)'
+        ),
+        xaxis=dict(
+            title="Date",
+            color=colors["text"],
+            gridcolor='rgba(255,255,255,0.1)'
+        )
+    )
+    
+    return fig
+
+
 def plot_strategy(data: pd.DataFrame, strategy_name: str = "Stratégie"):
     """Graphique prix + valeur du portefeuille."""
     fig = make_subplots(
@@ -56,33 +158,51 @@ def plot_strategy(data: pd.DataFrame, strategy_name: str = "Stratégie"):
     return fig
 
 
-def plot_compare_strategies(results: dict, initial_capital: float = 10000):
+def plot_compare_strategies(results: dict, initial_capital: float = 10000, 
+                           normalize: bool = True):
     """
     Compare plusieurs stratégies sur un même graphique.
     
     Args:
         results: dict avec {nom_stratégie: DataFrame}
+        initial_capital: capital de départ
+        normalize: si True, normalise toutes les courbes à base 100
     """
     fig = go.Figure()
     
-    colors = ['#00d4ff', '#00ff88', '#ff6b6b', '#ffd93d']
+    colors = ['#00d4ff', '#00ff88', '#ff6b6b', '#ffd93d', '#9d4edd', '#ff9f1c']
     
     for i, (name, data) in enumerate(results.items()):
+        if normalize:
+            # Normalisation à base 100
+            values = (data['portfolio_value'] / data['portfolio_value'].iloc[0]) * 100
+            yaxis_title = "Performance (Base 100)"
+        else:
+            values = data['portfolio_value']
+            yaxis_title = "Valeur Portefeuille (€)"
+        
         fig.add_trace(go.Scatter(
             x=data.index,
-            y=data['portfolio_value'],
+            y=values,
             mode='lines',
             name=name,
             line=dict(color=colors[i % len(colors)], width=2)
         ))
     
-    # Ligne capital initial
-    fig.add_hline(y=initial_capital, line_dash="dash", line_color="white", opacity=0.5)
+    # Ligne de référence
+    reference_value = 100 if normalize else initial_capital
+    fig.add_hline(
+        y=reference_value, 
+        line_dash="dash", 
+        line_color="white", 
+        opacity=0.5,
+        annotation_text=f"Référence ({reference_value})"
+    )
     
     fig.update_layout(
         title="Comparaison des Stratégies",
         xaxis_title="Date",
-        yaxis_title="Valeur Portefeuille (€)",
+        yaxis_title=yaxis_title,
         template="plotly_dark",
         hovermode="x unified"
     )
