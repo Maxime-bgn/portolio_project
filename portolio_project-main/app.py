@@ -26,9 +26,8 @@ server = app.server
 
 REFRESH_INTERVAL = 5 * 60 * 1000
 
-# ============================================
 # LAYOUT
-# ============================================
+
 app.layout = dbc.Container([
     dcc.Interval(id="refresh-interval", interval=REFRESH_INTERVAL, n_intervals=0),
     dcc.Store(id="prices-store"),

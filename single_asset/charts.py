@@ -29,99 +29,68 @@ def plot_strategy_normalized(data: pd.DataFrame, result: pd.DataFrame,
                             ticker: str, strategy_name: str,
                             colors: dict = None, display_mode: str = "base100"):
     """
-    Graphique normalisé : Prix vs Stratégie.
-    
-    Args:
-        data: DataFrame des prix (avec colonne 'Close')
-        result: DataFrame du résultat de la stratégie (avec 'portfolio_value')
-        ticker: Nom du ticker
-        strategy_name: Nom de la stratégie
-        colors: Dict avec 'blue', 'green', 'card', 'text'
-        display_mode: "base100" ou "returns" (rendements cumulés en %)
-    
-    Returns:
-        Figure Plotly
+    Graphique normalisé : Prix vs Stratégie avec double axe Y.
     """
     if colors is None:
         colors = {
             "blue": "#00d4ff",
             "green": "#00ff88",
             "card": "#1a1a1a",
-            "text": "#ffffff"
+            "text": "#ffffff",
+            "orange": "#ffa500"
         }
     
-    # Calcul selon le mode d'affichage
+    # Créer subplot avec secondary_y
+    fig = make_subplots(specs=[[{"secondary_y": True}]])
+    
     if display_mode == "base100":
-        # Normalisation à base 100
-        price_values = (data['Close'] / data['Close'].iloc[0]) * 100
-        portfolio_values = (result['portfolio_value'] / result['portfolio_value'].iloc[0]) * 100
-        yaxis_title = "Performance (Base 100)"
-        reference_line = 100
-        reference_text = "Point de départ (100)"
-        value_format = ":.2f"
-    else:  # returns
-        # Rendements cumulés en %
-        price_values = ((data['Close'] / data['Close'].iloc[0]) - 1) * 100
-        portfolio_values = ((result['portfolio_value'] / result['portfolio_value'].iloc[0]) - 1) * 100
-        yaxis_title = "Rendement Cumulé (%)"
-        reference_line = 0
-        reference_text = "Rendement nul (0%)"
-        value_format = ":+.2f"
-    
-    fig = go.Figure()
-    
-    # Courbe Buy & Hold
-    fig.add_trace(go.Scatter(
-        x=data.index,
-        y=price_values,
-        name=f"Buy & Hold {ticker}",
-        line=dict(color=colors["blue"], width=2.5),
-        hovertemplate=f'<b>Buy & Hold</b><br>Valeur: %{{y{value_format}}}<extra></extra>'
-    ))
-    
-    # Courbe Stratégie
-    fig.add_trace(go.Scatter(
-        x=result.index,
-        y=portfolio_values,
-        name=f"Stratégie: {strategy_name}",
-        line=dict(color=colors["green"], width=2.5),
-        fill='tonexty',
-        fillcolor='rgba(0, 255, 136, 0.1)',
-        hovertemplate=f'<b>Stratégie</b><br>Valeur: %{{y{value_format}}}<extra></extra>'
-    ))
-    
-    # Ligne de référence
-    fig.add_hline(
-        y=reference_line, 
-        line_dash="dash", 
-        line_color="white", 
-        opacity=0.3,
-        annotation_text=reference_text,
-        annotation_position="right"
-    )
+        # Base 100 normalisé
+        price_norm = (data['Close'] / data['Close'].iloc[0]) * 100
+        portfolio_norm = (result['portfolio_value'] / result['portfolio_value'].iloc[0]) * 100
+        
+        fig.add_trace(
+            go.Scatter(x=data.index, y=price_norm,
+                      name=f"Prix {ticker}",
+                      line=dict(color=colors["orange"], width=2.5)),
+            secondary_y=False
+        )
+        
+        fig.add_trace(
+            go.Scatter(x=result.index, y=portfolio_norm,
+                      name=f"Stratégie {strategy_name}",
+                      line=dict(color=colors["green"], width=2.5)),
+            secondary_y=True
+        )
+        
+        fig.update_yaxes(title_text="Prix Asset (base 100)", secondary_y=False)
+        fig.update_yaxes(title_text="Portfolio (base 100)", secondary_y=True)
+        
+    else:  # mode "returns"
+        # Prix brut vs Portfolio value
+        fig.add_trace(
+            go.Scatter(x=data.index, y=data['Close'],
+                      name=f"Prix {ticker} (EUR)",
+                      line=dict(color=colors["orange"], width=2.5)),
+            secondary_y=False
+        )
+        
+        fig.add_trace(
+            go.Scatter(x=result.index, y=result['portfolio_value'],
+                      name=f"Portfolio {strategy_name} (EUR)",
+                      line=dict(color=colors["green"], width=2.5)),
+            secondary_y=True
+        )
+        
+        fig.update_yaxes(title_text=f"Prix {ticker} (€)", secondary_y=False)
+        fig.update_yaxes(title_text="Valeur Portfolio (€)", secondary_y=True)
     
     fig.update_layout(
         template="plotly_dark",
         paper_bgcolor=colors["card"],
         plot_bgcolor=colors["card"],
         hovermode="x unified",
-        legend=dict(
-            orientation="h",
-            yanchor="bottom",
-            y=1.02,
-            xanchor="center",
-            x=0.5
-        ),
-        yaxis=dict(
-            title=yaxis_title,
-            color=colors["text"],
-            gridcolor='rgba(255,255,255,0.1)'
-        ),
-        xaxis=dict(
-            title="Date",
-            color=colors["text"],
-            gridcolor='rgba(255,255,255,0.1)'
-        )
+        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="center", x=0.5),
+        xaxis=dict(title="Date", color=colors["text"])
     )
     
     return fig

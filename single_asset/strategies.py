@@ -1,6 +1,4 @@
-"""
-Stratégies de backtesting - Société Générale
-"""
+#Stratégies de backtesting - Société Générale
 import pandas as pd
 import numpy as np
 from sklearn.linear_model import LinearRegression
@@ -71,24 +69,29 @@ def end_of_month(data: pd.DataFrame, initial_capital: float = 10000) -> pd.DataF
     df['strategy'] = 'End of Month'
     return df
 
-
 def volatility_breakout(data: pd.DataFrame, initial_capital: float = 10000, k: float = 0.5) -> pd.DataFrame:
     """
     Stratégie Volatility Breakout : acheter sur cassure de volatilité.
-    Si prix > High veille + k * range veille, on achète.
+    Si prix > High veille + k * range veille, on achète le lendemain.
     """
     df = data.copy()
     df['returns'] = df['Close'].pct_change()
+    
+    # Calcul des niveaux de breakout
     df['prev_range'] = (df['High'] - df['Low']).shift(1)
     df['prev_high'] = df['High'].shift(1)
     df['breakout_level'] = df['prev_high'] + k * df['prev_range']
-    df['signal'] = (df['High'] > df['breakout_level']).astype(int)
+    
+    # Signal décalé d'un jour pour éviter le forward-looking
+    df['signal'] = (df['High'] > df['breakout_level']).astype(int).shift(1).fillna(0)
+    
+    # Calcul des returns de la stratégie
     df['strategy_returns'] = df['signal'] * df['returns']
     df['cumulative_returns'] = (1 + df['strategy_returns'].fillna(0)).cumprod()
     df['portfolio_value'] = initial_capital * df['cumulative_returns']
     df['strategy'] = 'Volatility Breakout'
+    
     return df
-
 
 def trend_following(data: pd.DataFrame, initial_capital: float = 10000, ma_period: int = 50) -> pd.DataFrame:
     """

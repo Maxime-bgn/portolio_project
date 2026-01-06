@@ -1,6 +1,5 @@
-"""
-Universal Asset Dashboard - Quant A
-"""
+#Universal Asset Dashboard - Quant A
+
 from dash import Dash, html, dcc, callback, Output, Input, State, callback_context
 import dash_bootstrap_components as dbc
 import plotly.graph_objects as go
@@ -23,7 +22,13 @@ from utils.data_fetcher import get_current_prices as get_current_prices_pm
 from portfolio_module import portfolio_core as pm_core
 from portfolio_module import components as pm_components
 
-# === STYLES ===
+
+# render  App 
+app = Dash(__name__, external_stylesheets=[dbc.themes.DARKLY])
+server = app.server  
+app.title = "Portofolio_Project"
+
+#STYLES 
 COLORS = {
     "background": "#0a0a0a",
     "card": "#1a1a1a",
@@ -44,9 +49,7 @@ CARD_STYLE = {
     "border": "1px solid #222"
 }
 
-#  APP 
-app = Dash(__name__, external_stylesheets=[dbc.themes.DARKLY])
-app.title = "Universal Asset Dashboard"
+
 
 STRATEGIES = {
     "buy_and_hold": buy_and_hold,
@@ -352,7 +355,7 @@ app.layout = dcc.Tabs(
 ])
 
 
-# === CALLBACKS ===
+# CALLBACKS 
 
 @callback(
     Output("current-ticker", "data"),
@@ -641,4 +644,4 @@ def pm_update_all(assets_str, period, weight_mode, n):
 
 
 if __name__ == "__main__":
-    app.run(debug=True, port=8050)
+    app.run(debug=True)

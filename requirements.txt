@@ -1,5 +1,7 @@
-streamlit
-yfinance
+dash
+dash-bootstrap-components
+plotly
 pandas
 numpy
-plotly
+gunicorn
+yfinance
