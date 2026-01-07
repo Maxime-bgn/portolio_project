@@ -33,6 +33,7 @@ portfolio_project/
 ├── requirements.txt # Python dependencies
 └── README.md # Documentation
 
+
 shell
 Copy code
 
