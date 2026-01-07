@@ -3,14 +3,12 @@ Advanced Analytics Module
 Hurst exponent, multi-scale variance, regime detection
 Based Market Risk course 2024-2025
 """
-
 import pandas as pd
 import numpy as np
 from scipy import stats
 
 ## According to Mr garcin courses (market risk)
 def estimate_hurst_exponent(returns):
-    
     N = len(returns)
     
     if N < 4:
@@ -44,7 +42,6 @@ def estimate_hurst_exponent(returns):
     
     return H
 
-
 def multi_scale_variance(returns, scales=None):
     if scales is None:
         scales = [1, 5, 10, 20, 60]
@@ -75,15 +72,14 @@ def multi_scale_variance(returns, scales=None):
             # Actual ratio shows deviation from random walk
             
             results.append({
-                'scale': scale,
-                'variance': variance,
-                'var_ratio': var_ratio,
-                'theoretical_ratio': scale,  # For H=0.5
-                'deviation': var_ratio / scale if scale > 0 else 0
+                "scale": scale,
+                "variance": variance,
+                "var_ratio": var_ratio,
+                "theoretical_ratio": scale,  # For H=0.5
+                "deviation": var_ratio / scale if scale > 0 else 0
             })
     
     return pd.DataFrame(results)
-
 
 def detect_regimes_simple(prices, window=60):
     returns = prices.pct_change().dropna()
@@ -98,25 +94,26 @@ def detect_regimes_simple(prices, window=60):
     
     for i in range(len(rolling_mean)):
         if pd.isna(rolling_mean.iloc[i]) or pd.isna(rolling_std.iloc[i]):
-            regimes.append('Unknown')
+            regimes.append("Unknown")
             continue
             
         mean = rolling_mean.iloc[i]
         std = rolling_std.iloc[i]
         
         if std > vol_threshold * 1.5:
-            regime = 'High Vol'
+            regime = "High Vol"
         elif mean > trend_threshold:
-            regime = 'Bull'
+            regime = "Bull"
         elif mean < -trend_threshold:
-            regime = 'Bear'
+            regime = "Bear"
         else:
-            regime = 'Sideways'
+            regime = "Sideways"
         
         regimes.append(regime)
+    
     return pd.Series(regimes, index=rolling_mean.index)
 
-#VR(q) > 1: positive autocorrelation (momentum)
+# VR(q) > 1: positive autocorrelation (momentum)
 # VR(q) < 1: negative autocorrelation (mean reversion)
 def variance_ratio_test(returns, lags=None):
     if lags is None:
@@ -129,6 +126,7 @@ def variance_ratio_test(returns, lags=None):
     for q in lags:
         if q >= n:
             continue
+        
         q_returns = []
         for i in range(0, n - q, q):
             q_ret = returns.iloc[i:i+q].sum()
@@ -144,21 +142,20 @@ def variance_ratio_test(returns, lags=None):
         se = np.sqrt((2 * (q - 1)) / (3 * q * n))
         z_stat = (vr - 1) / se if se > 0 else 0
         
-        interpretation = 'Random Walk'
+        interpretation = "Random Walk"
         if vr > 1.2:
-            interpretation = 'Momentum'
+            interpretation = "Momentum"
         elif vr < 0.8:
-            interpretation = 'Mean Reversion'
+            interpretation = "Mean Reversion"
         
         results.append({
-            'lag': q,
-            'variance_ratio': vr,
-            'z_statistic': z_stat,
-            'interpretation': interpretation
+            "lag": q,
+            "variance_ratio": vr,
+            "z_statistic": z_stat,
+            "interpretation": interpretation
         })
     
     return pd.DataFrame(results)
-
 
 def fractional_differencing_check(returns):
     H = estimate_hurst_exponent(returns)
@@ -171,6 +168,6 @@ def fractional_differencing_check(returns):
         recommendation = "Series close to random walk. Standard differencing OK"
     
     return {
-        'hurst': H,
-        'recommendation': recommendation
+        "hurst": H,
+        "recommendation": recommendation
     }
