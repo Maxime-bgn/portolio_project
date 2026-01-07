@@ -1,0 +1,7 @@
+Daily Report for AAPL (2026-01-07)
+
+Total Return (%): 8.83
+Annualized Return (%): 8.86
+Volatility (%): 32.46
+Sharpe Ratio: 0.21
+Max Drawdown (%): -30.22
