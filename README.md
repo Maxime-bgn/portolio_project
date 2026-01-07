@@ -1,137 +1,86 @@
-# 📈 Portfolio Dashboard
+# Quant B - Portfolio Analytics Dashboard
 
-A real-time financial dashboard for quantitative portfolio analysis, built with Python and Dash.
+Multi-asset portfolio management platform with advanced risk analytics.
 
-## 🎯 Features
-
-- **Real-time Data**: Fetches live market data from Yahoo Finance API
-- **Multi-Asset Support**: Track stocks, crypto, forex, and more
-- **Auto-Refresh**: Data updates automatically every 5 minutes
-- **Interactive Charts**: Plotly-powered visualizations with zoom, pan, hover
-- **Daily Reports**: Automated daily reports via cron job
-- **Portfolio Analysis**: Performance metrics, correlation, volatility
-
-## 🏗️ Project Structure
+## Structure
 
 ```
-portfolio_project/
-├── app.py                 # Main Dash application
-├── requirements.txt       # Python dependencies
-├── README.md             # This file
-├── utils/
+quant_b_final/
+├── app.py                          # Main application (multi-page)
+├── portfolio_module/
 │   ├── __init__.py
-│   └── data_fetcher.py   # Yahoo Finance API utilities
-├── quant_a/              # Single Asset Analysis Module
-│   └── ...
-├── quant_b/              # Portfolio Analysis Module
-│   └── ...
-├── cron/
-│   ├── daily_report.py   # Daily report generator
-│   └── README.md         # Cron setup documentation
-└── reports/              # Generated daily reports
+│   ├── portfolio_core.py           # Core metrics (Sharpe, Sortino, VaR, etc.)
+│   ├── components.py               # UI components (professional design)
+│   └── advanced_analytics.py       # Hurst, multi-scale variance, regimes
+└── utils/
+    ├── __init__.py
+    ├── data_fetcher.py             # Yahoo Finance data retrieval
+    └── daily_report.py             # Daily report generator (cron)
 ```
 
-## 🚀 Quick Start
-
-### Prerequisites
-
-- Python 3.9+
-- pip
-
-### Installation
+## Installation
 
 ```bash
-# Clone the repository
-git clone https://github.com/Maxime-bgn/portolio_project.git
-cd portolio_project
-
 # Install dependencies
-pip install -r requirements.txt
+pip install dash dash-bootstrap-components plotly pandas numpy yfinance scipy
 
-# Run the application
-python app.py
+# Run the app
+python3 app.py
 ```
 
-Open your browser at: **http://localhost:8050**
+Open browser at: http://localhost:8050
 
-## 📊 Usage
+## Features
 
-### Changing Assets
+### Page 1: PORTFOLIO
+- Real-time price cards
+- Performance chart (base 100)
+- Allocation pie chart
+- Drawdown analysis
+- Correlation matrix
+- Portfolio metrics: Sharpe, Sortino, Calmar, VaR, CVaR, etc.
+- Asset breakdown table
 
-Enter ticker symbols separated by commas:
-- Stocks: `AAPL`, `MSFT`, `GOOGL`
-- Crypto: `BTC-USD`, `ETH-USD`
-- Forex: `EURUSD=X`, `GBPUSD=X`
-- French stocks: `ENGI.PA`, `MC.PA`
+### Page 2: ADVANCED ANALYTICS
+- Hurst Exponent by asset (persistence analysis)
+- Multi-scale variance (volatility at different time scales)
+- Variance Ratio Test (Lo-MacKinlay random walk test)
+- Regime Detection (Bull/Bear/High Vol/Sideways)
 
-### Time Period
+## Configuration
 
-Select from: 1 Month, 3 Months, 6 Months, 1 Year, 2 Years
+- **Assets**: Enter tickers separated by commas (e.g., AAPL, MSFT, GOOGL)
+- **Period**: 1mo, 3mo, 6mo, 1y, 2y
+- **Weights**: Equal or Custom
+- **Rebalancing**: Never, Monthly, Quarterly
+- **Benchmark**: For Beta/Alpha calculation (e.g., SPY)
 
-## ⏰ Cron Job Setup
+## Metrics Explanation
 
-Daily reports are generated automatically at 8pm. See [cron/README.md](cron/README.md) for setup instructions.
+**Sharpe Ratio**: Return / Volatility (>1 = good, >2 = excellent)
+**Sortino Ratio**: Like Sharpe but only penalizes downside
+**Calmar Ratio**: CAGR / Max Drawdown
+**VaR 95%**: Maximum loss with 95% confidence
+**CVaR 95%**: Expected loss beyond VaR (Expected Shortfall)
+**Hurst Exponent**: H>0.5 = persistent, H=0.5 = random walk, H<0.5 = mean-reverting
+
+## Daily Report
+
+Configure cron job to generate daily reports:
 
 ```bash
-# Add to crontab
-0 20 * * * cd /path/to/portfolio_project && python3 cron/daily_report.py
+# Edit crontab
+crontab -e
+
+# Add line (runs at 8pm daily)
+0 20 * * * cd /path/to/project && python3 utils/daily_report.py
 ```
 
-## 🖥️ Deployment (Linux VM)
+## Auto-refresh
 
-### Using systemd (recommended for 24/7)
+Dashboard auto-refreshes every 5 minutes for live data.
 
-1. Create service file:
-```bash
-sudo nano /etc/systemd/system/portfolio.service
-```
+## Notes
 
-2. Add configuration:
-```ini
-[Unit]
-Description=Portfolio Dashboard
-After=network.target
-
-[Service]
-User=your_user
-WorkingDirectory=/path/to/portfolio_project
-ExecStart=/usr/bin/python3 app.py
-Restart=always
-RestartSec=10
-
-[Install]
-WantedBy=multi-user.target
-```
-
-3. Enable and start:
-```bash
-sudo systemctl enable portfolio
-sudo systemctl start portfolio
-```
-
-### Using screen (simple)
-
-```bash
-screen -S portfolio
-python app.py
-# Press Ctrl+A, then D to detach
-```
-
-## 👥 Team
-
-| Role | Module | Description |
-|------|--------|-------------|
-| **Quant A** | Single Asset | Backtesting, strategies, predictions |
-| **Quant B** | Portfolio | Multi-asset, correlations, optimization |
-
-## 📦 Dependencies
-
-- **dash** - Web framework
-- **plotly** - Interactive charts
-- **pandas** - Data manipulation
-- **yfinance** - Yahoo Finance API
-- **numpy** - Numerical computations
-
-## 📝 License
-
-Educational project - ESILV Paris
+Based on ESILV Market Risk course 2024-2025.
+All advanced analytics (Hurst, multi-scale variance) follow course methodology.

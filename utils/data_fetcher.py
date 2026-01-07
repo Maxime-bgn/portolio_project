@@ -1,22 +1,18 @@
 """
-Data fetching utilities - Yahoo Finance API
+Data fetching utilities - Yahoo Finance
 """
 
 import yfinance as yf
 import pandas as pd
-from typing import List, Dict
 
 
-def fetch_asset_data(ticker: str, period: str = "1y") -> pd.DataFrame:
+def fetch_asset_data(ticker, period="1y"):
     """
-    Fetch historical OHLCV data for a single asset.
+    Recupere les donnees historiques OHLCV.
     
     Args:
-        ticker: Symbol (e.g., 'AAPL', 'ENGI.PA', 'BTC-USD', 'EURUSD=X')
+        ticker: 'AAPL', 'ENGI.PA', 'BTC-USD', 'EURUSD=X'
         period: '1mo', '3mo', '6mo', '1y', '2y', '5y'
-    
-    Returns:
-        DataFrame with Date index and OHLCV columns
     """
     try:
         asset = yf.Ticker(ticker)
@@ -29,13 +25,8 @@ def fetch_asset_data(ticker: str, period: str = "1y") -> pd.DataFrame:
         return pd.DataFrame()
 
 
-def fetch_multiple_assets(tickers: List[str], period: str = "1y") -> pd.DataFrame:
-    """
-    Fetch closing prices for multiple assets.
-    
-    Returns:
-        DataFrame with Date index and ticker columns
-    """
+def fetch_multiple_assets(tickers, period="1y"):
+    """Recupere les prix de cloture pour plusieurs assets."""
     data = {}
     for ticker in tickers:
         df = fetch_asset_data(ticker, period)
@@ -48,13 +39,8 @@ def fetch_multiple_assets(tickers: List[str], period: str = "1y") -> pd.DataFram
     return pd.DataFrame(data).dropna()
 
 
-def get_current_prices(tickers: List[str]) -> Dict[str, dict]:
-    """
-    Get real-time prices and info for multiple assets.
-    
-    Returns:
-        Dict with ticker as key and info dict as value
-    """
+def get_current_prices(tickers):
+    """Recupere les prix en temps reel."""
     results = {}
     for ticker in tickers:
         try:
@@ -62,7 +48,7 @@ def get_current_prices(tickers: List[str]) -> Dict[str, dict]:
             info = asset.info
             hist = asset.history(period="2d")
             
-            # Calculate daily change
+            # Daily change
             if len(hist) >= 2:
                 prev_close = hist["Close"].iloc[-2]
                 curr_close = hist["Close"].iloc[-1]
