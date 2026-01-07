@@ -1,100 +1,98 @@
-Voici le code Markdown pur, sobre et structuré, idéal pour un profil GitHub professionnel.
+Here's a clean, professional README in pure Markdown format suitable for a GitHub repository:
+markdown# Quantitative Finance Dashboards
 
-Markdown
-
-# Portfolio Project: Quantitative Finance Dashboards
-
-Ce dépôt regroupe deux applications interactives développées avec Streamlit pour l'analyse quantitative et la gestion de portefeuille.
+Two interactive applications built with Streamlit for quantitative analysis and portfolio management.
 
 ---
 
 ## 1. Single Asset Strategy Dashboard
-Interface dédiée au backtesting de stratégies systématiques sur un titre unique.
 
-### Fonctionnalités
-* **Fetch & Visualize** : Récupération des données historiques et visualisation des prix.
-* **Backtesting** : Test de stratégies basées sur des règles définies.
-* **Performance** : Évaluation des rendements cumulés et des drawdowns.
-* **Benchmark** : Comparaison systématique avec la stratégie Buy & Hold.
+Backtesting platform for systematic trading strategies on individual securities.
 
-### Stratégies intégrées
-* Buy & Hold
-* End-of-Month & Volatility Breakout
-* Trend Following (Golden Cross, MACD Crossover)
-* RSI Oversold
+### Features
 
-### Métriques calculées
-* Rendement total et annualisé
-* Volatilité et Ratio de Sharpe
-* Max Drawdown et temps de récupération
+- **Fetch & Visualize**: Historical data retrieval and price visualization
+- **Backtesting**: Test strategies based on defined trading rules
+- **Performance**: Evaluation of cumulative returns and drawdowns
+- **Benchmark**: Systematic comparison against Buy & Hold strategy
 
-### Structure du module
-```text
-single_asset/
-├── data_fetcher.py # Récupération des prix historiques
-├── strategies.py   # Implémentation des règles de trading
-├── charts.py       # Fonctions de visualisation
-├── metrics.py      # Calculs de performance
-└── app.py          # Interface Streamlit
+### Integrated Strategies
+
+- Buy & Hold
+- End-of-Month & Volatility Breakout
+- Trend Following (Golden Cross, MACD Crossover)
+- RSI Oversold
+
+### Calculated Metrics
+
+- Total and annualized returns
+- Volatility and Sharpe Ratio
+- Maximum Drawdown and recovery time
+
+### Module Structure
 ```
-Lancement :
+single_asset/
+├── data_fetcher.py  # Historical price retrieval
+├── strategies.py    # Trading rule implementation
+├── charts.py        # Visualization functions
+├── metrics.py       # Performance calculations
+└── app.py           # Streamlit interface
+```
 
-Bash
-
+### Launch
+```bash
 pip install streamlit pandas numpy yfinance plotly
 streamlit run single_asset/app.py
-2. Quant B – Multi-Asset Portfolio Dashboard
-Plateforme d'analyse de portefeuille multi-actifs intégrant des diagnostics de risque avancés.
-
-Fonctionnalités
-Portfolio Analytics : Calcul des statistiques de risque et rendement.
-
-Allocation : Visualisation de la répartition des actifs.
-
-Risk Management : Analyse des corrélations, VaR (Value at Risk) et CVaR.
-
-Advanced Analytics : Exposant de Hurst, Variance Ratio et détection de régimes.
-
-Régimes de marché détectés
-Bull / Bear
-
-Sideways (Latéral)
-
-High Volatility
-
-Métriques avancées
-Ratios : Sharpe, Sortino, Calmar
-
-Alpha et Beta par rapport au benchmark
-
-Matrice de corrélation
-
-Structure du module
-Plaintext
-
-FinalApp.py             # Interface principale
 ```
+
+---
+
+## 2. Quant B – Multi-Asset Portfolio Dashboard
+
+Multi-asset portfolio analysis platform with advanced risk diagnostics.
+
+### Features
+
+- **Portfolio Analytics**: Risk and return statistics calculation
+- **Allocation**: Asset distribution visualization
+- **Risk Management**: Correlation analysis, VaR (Value at Risk), and CVaR
+- **Advanced Analytics**: Hurst exponent, Variance Ratio, and regime detection
+
+### Detected Market Regimes
+
+- Bull / Bear
+- Sideways (Lateral)
+- High Volatility
+
+### Advanced Metrics
+
+- Ratios: Sharpe, Sortino, Calmar
+- Alpha and Beta relative to benchmark
+- Correlation matrix
+
+### Module Structure
+```
+FinalApp.py              # Main interface
 portfolio_module/
-├── portfolio_core.py   # Métriques de base
-├── advanced_analytics.py # Hurst, variance ratio, régimes
-└── components.py       # Composants UI
+├── portfolio_core.py    # Core metrics
+├── advanced_analytics.py # Hurst, variance ratio, regimes
+└── components.py        # UI components
 utils/
-└── data_fetcher.py     # Gestion des données Yahoo Finance
-
+└── data_fetcher.py      # Yahoo Finance data management
 ```
-Lancement :
 
-Bash
-
+### Launch
+```bash
 pip install streamlit pandas numpy yfinance plotly scipy
 streamlit run FinalApp.py
-Stack Technique
-Langage : Python
+```
 
-Interface : Streamlit
+---
 
-Analyse de données : Pandas, NumPy, SciPy
+## Technical Stack
 
-Visualisation : Plotly
-
-Données : Yahoo Finance API
+- **Language**: Python
+- **Interface**: Streamlit
+- **Data Analysis**: Pandas, NumPy, SciPy
+- **Visualization**: Plotly
+- **Data Source**: Yahoo Finance API
