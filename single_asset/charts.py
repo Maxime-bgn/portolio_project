@@ -1,13 +1,13 @@
-"""
-Graphiques de performance - Plotly
-"""
+
+# Graphiques de performance - Plotly
+
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 import pandas as pd
 
 
 def plot_price(data: pd.DataFrame):
-    """Graphique du prix de l'actif."""
+    #Graphique du prix de l'actif
     fig = go.Figure()
     fig.add_trace(go.Scatter(
         x=data.index,
@@ -25,12 +25,9 @@ def plot_price(data: pd.DataFrame):
     return fig
 
 
-def plot_strategy_normalized(data: pd.DataFrame, result: pd.DataFrame, 
-                            ticker: str, strategy_name: str,
-                            colors: dict = None, display_mode: str = "base100"):
-    """
-    Graphique normalisé : Prix vs Stratégie avec double axe Y.
-    """
+def plot_strategy_normalized(data: pd.DataFrame, result: pd.DataFrame,ticker: str, strategy_name: str,colors: dict = None, display_mode: str = "base100"):
+    # Graphique normalisé : Prix vs Stratégie avec double axe Y.
+    
     if colors is None:
         colors = {
             "blue": "#00d4ff",
@@ -97,7 +94,7 @@ def plot_strategy_normalized(data: pd.DataFrame, result: pd.DataFrame,
 
 
 def plot_strategy(data: pd.DataFrame, strategy_name: str = "Stratégie"):
-    """Graphique prix + valeur du portefeuille."""
+    #Graphique prix + valeur du portefeuille
     fig = make_subplots(
         rows=2, cols=1,
         shared_xaxes=True,
@@ -127,11 +124,11 @@ def plot_strategy(data: pd.DataFrame, strategy_name: str = "Stratégie"):
     return fig
 
 
-def plot_compare_strategies(results: dict, initial_capital: float = 10000, 
-                           normalize: bool = True):
-    """
-    Compare plusieurs stratégies sur un même graphique.
-    
+def plot_compare_strategies(results: dict, initial_capital: float = 10000,normalize: bool = True):
+                               
+    #Compare plusieurs stratégies sur un même graphique.
+                           
+    """    
     Args:
         results: dict avec {nom_stratégie: DataFrame}
         initial_capital: capital de départ
@@ -179,7 +176,7 @@ def plot_compare_strategies(results: dict, initial_capital: float = 10000,
 
 
 def plot_drawdown(data: pd.DataFrame):
-    """Graphique du drawdown."""
+    #Graphique du drawdown.
     df = data.copy()
     df['peak'] = df['portfolio_value'].expanding().max()
     df['drawdown'] = (df['portfolio_value'] - df['peak']) / df['peak'] * 100
@@ -204,7 +201,7 @@ def plot_drawdown(data: pd.DataFrame):
 
 
 def plot_returns_distribution(data: pd.DataFrame):
-    """Histogramme des rendements journaliers."""
+    #Histogramme des rendements journaliers.
     fig = go.Figure()
     fig.add_trace(go.Histogram(
         x=data['returns'].dropna() * 100,
