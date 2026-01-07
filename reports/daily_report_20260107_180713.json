@@ -1,0 +1,64 @@
+{
+    "date": "2026-01-07",
+    "time": "18:07:13",
+    "portfolio_metrics": {
+        "annual_return": 20.07,
+        "volatility": 8.03,
+        "sharpe_ratio": 2.25,
+        "max_drawdown": -1.85
+    },
+    "current_prices": {
+        "AAPL": {
+            "price": 262.42,
+            "change": 0.022880042507792242
+        },
+        "MSFT": {
+            "price": 488.38,
+            "change": 2.062651755607336
+        },
+        "GOOGL": {
+            "price": 320.42,
+            "change": 1.9278480718946538
+        },
+        "XLF": {
+            "price": 55.855,
+            "change": 0.0
+        },
+        "GLD": {
+            "price": 410.2,
+            "change": -0.7212305826938636
+        }
+    },
+    "assets": {
+        "AAPL": {
+            "return": -51.43,
+            "volatility": 11.33,
+            "sharpe": -4.72,
+            "weight": 20.0
+        },
+        "MSFT": {
+            "return": -6.57,
+            "volatility": 18.1,
+            "sharpe": -0.47,
+            "weight": 20.0
+        },
+        "GOOGL": {
+            "return": 30.4,
+            "volatility": 21.1,
+            "sharpe": 1.35,
+            "weight": 20.0
+        },
+        "XLF": {
+            "return": 80.66,
+            "volatility": 13.23,
+            "sharpe": 5.95,
+            "weight": 20.0
+        },
+        "GLD": {
+            "return": 119.27,
+            "volatility": 22.3,
+            "sharpe": 5.26,
+            "weight": 20.0
+        }
+    }
+}

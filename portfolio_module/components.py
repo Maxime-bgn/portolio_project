@@ -1,166 +1,314 @@
-"""
-Quant B - Dashboard Components
-Custom weights, advanced metrics, visualizations
-"""
-
-from dash import html, dcc
-import dash_bootstrap_components as dbc
 import plotly.graph_objects as go
 import numpy as np
 import pandas as pd
+import streamlit as st
+
 
 COLORS = {
-    "background": "#0d1117",
-    "card": "#161b22",
-    "border": "#30363d",
-    "text": "#e6edf3",
-    "green": "#3fb950",
-    "red": "#f85149",
-    "blue": "#58a6ff",
-    "orange": "#d29922"
+    "background": "#0a0e1a",
+    "card": "#111828",
+    "border": "#1f2937",
+    "text": "#e5e7eb",
+    "text_secondary": "#9ca3af",
+    "accent": "#3b82f6",
+    "positive": "#10b981",
+    "negative": "#ef4444",
+    "warning": "#f59e0b",
+    "info": "#06b6d4"
 }
 
 CARD_STYLE = {
     "backgroundColor": COLORS["card"],
-    "border": f"1px solid {COLORS['border']}",
-    "borderRadius": "8px",
-    "padding": "20px",
-    "marginBottom": "15px"
+    "border": "1px solid " + COLORS["border"],
+    "borderRadius": "4px",
+    "padding": "24px",
+    "marginBottom": "16px"
 }
 
+def create_section_divider(title=""):
+    st.markdown("""
+    <div style="height: 1px; background-color: """ + COLORS["border"] + """; margin-top: 8px; margin-bottom: 16px;"></div>
+    """, unsafe_allow_html=True)
 
-def create_weight_sliders(assets):
-    """Create weight sliders for each asset."""
-    sliders = []
-    for asset in assets:
-        sliders.append(
-            html.Div([
-                html.Label(f"{asset}", style={"color": COLORS["text"], "fontWeight": "bold"}),
-                dcc.Slider(
-                    id={"type": "weight-slider", "asset": asset},
-                    min=0, max=100, step=5, value=100 // len(assets),
-                    marks={0: "0%", 50: "50%", 100: "100%"},
-                    tooltip={"placement": "bottom", "always_visible": False}
-                )
-            ], style={"marginBottom": "15px"})
-        )
-    return html.Div(sliders)
-
+def display_metric_line(label, value, color=None, sublabel=None):
+    if color is None:
+        color = COLORS["text"]
+    
+    col1, col2 = st.columns([1, 1])
+    with col1:
+        st.markdown("""
+        <div style="color: """ + COLORS["text_secondary"] + """; font-size: 11px; font-weight: 500; 
+                    text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">
+            """ + label + """
+        </div>
+        """, unsafe_allow_html=True)
+    
+    with col2:
+        sublabel_html = ('<span style="color: ' + COLORS["text_secondary"] + '; font-size: 12px; margin-left: 4px;">' + sublabel + '</span>') if sublabel else ""
+        st.markdown("""
+        <div style="text-align: right;">
+            <span style="color: """ + color + """; font-size: 20px; font-weight: 600; line-height: 1.2;">
+                """ + str(value) + """
+            </span>
+            """ + sublabel_html + """
+        </div>
+        """, unsafe_allow_html=True)
 
 def create_portfolio_metrics_card(metrics):
-    """Create portfolio metrics display."""
-    ret_color = COLORS["green"] if metrics["annual_return"] >= 0 else COLORS["red"]
+    st.markdown("""
+    <div style="color: """ + COLORS["text"] + """; font-size: 10px; font-weight: 700; 
+                letter-spacing: 1px; margin-bottom: 16px; text-transform: uppercase;">
+        RETURNS & RISK
+    </div>
+    """, unsafe_allow_html=True)
     
-    return html.Div([
-        html.Div([
-            html.Span("Rendement annuel: ", style={"color": COLORS["text"]}),
-            html.Span(f"{metrics['annual_return']}%", style={"color": ret_color, "fontWeight": "bold", "fontSize": "20px"})
-        ], style={"marginBottom": "12px"}),
+    ret_color = COLORS["positive"] if metrics.get("annual_return", 0) >= 0 else COLORS["negative"]
+    
+    display_metric_line("Annual Return", str(metrics.get("annual_return", "N/A")) + "%", ret_color)
+    display_metric_line("Volatility", str(metrics.get("volatility", "N/A")) + "%", COLORS["text"])
+    display_metric_line("Downside Deviation", str(metrics.get("downside_deviation", "N/A")) + "%", COLORS["text_secondary"])
+    
+    create_section_divider()
+    st.markdown("""
+    <div style="color: """ + COLORS["text"] + """; font-size: 10px; font-weight: 700; 
+                letter-spacing: 1px; margin-bottom: 16px; text-transform: uppercase;">
+        RISK-ADJUSTED PERFORMANCE
+    </div>
+    """, unsafe_allow_html=True)
+    
+    display_metric_line("Sharpe Ratio", str(metrics.get("sharpe_ratio", "N/A")), COLORS["accent"])
+    display_metric_line("Sortino Ratio", str(metrics.get("sortino_ratio", "N/A")), COLORS["info"])
+    display_metric_line("Calmar Ratio", str(metrics.get("calmar_ratio", "N/A")), COLORS["text"])
+    
+    create_section_divider()
+    st.markdown("""
+    <div style="color: """ + COLORS["text"] + """; font-size: 10px; font-weight: 700; 
+                letter-spacing: 1px; margin-bottom: 16px; text-transform: uppercase;">
+        DRAWDOWN ANALYSIS
+    </div>
+    """, unsafe_allow_html=True)
+    
+    display_metric_line("Maximum Drawdown", str(metrics.get("max_drawdown", "N/A")) + "%", COLORS["negative"])
+    display_metric_line("Current Drawdown", str(metrics.get("current_drawdown", "N/A")) + "%", COLORS["warning"])
+    display_metric_line("Ulcer Index", str(metrics.get("ulcer_index", "N/A")), COLORS["text_secondary"])
+    
+    create_section_divider()
+    st.markdown("""
+    <div style="color: """ + COLORS["text"] + """; font-size: 10px; font-weight: 700; 
+                letter-spacing: 1px; margin-bottom: 16px; text-transform: uppercase;">
+        VALUE AT RISK
+    </div>
+    """, unsafe_allow_html=True)
+    
+    display_metric_line("VaR (95%)", str(metrics.get("var_95", "N/A")) + "%", COLORS["warning"])
+    display_metric_line("CVaR (95%)", str(metrics.get("cvar_95", "N/A")) + "%", COLORS["negative"])
+    
+    create_section_divider()
+    st.markdown("""
+    <div style="color: """ + COLORS["text"] + """; font-size: 10px; font-weight: 700; 
+                letter-spacing: 1px; margin-bottom: 16px; text-transform: uppercase;">
+        DIVERSIFICATION
+    </div>
+    """, unsafe_allow_html=True)
+    
+    display_metric_line("Diversification Ratio", str(metrics.get("diversification_ratio", "N/A")), COLORS["positive"])
+    display_metric_line("Win Rate", str(metrics.get("win_rate", "N/A")) + "%", COLORS["info"])
+    
+    if "beta" in metrics:
+        create_section_divider()
         
-        html.Div([
-            html.Span("Volatilite: ", style={"color": COLORS["text"]}),
-            html.Span(f"{metrics['volatility']}%", style={"color": COLORS["orange"], "fontWeight": "bold", "fontSize": "20px"})
-        ], style={"marginBottom": "12px"}),
+        st.markdown("""
+        <div style="color: """ + COLORS["text"] + """; font-size: 10px; font-weight: 700; 
+                    letter-spacing: 1px; margin-bottom: 16px; text-transform: uppercase;">
+            MARKET EXPOSURE
+        </div>
+        """, unsafe_allow_html=True)
         
-        html.Div([
-            html.Span("Sharpe Ratio: ", style={"color": COLORS["text"]}),
-            html.Span(f"{metrics['sharpe_ratio']}", style={"color": COLORS["blue"], "fontWeight": "bold", "fontSize": "20px"})
-        ], style={"marginBottom": "12px"}),
+        display_metric_line("Beta", str(metrics.get("beta", "N/A")), COLORS["accent"])
         
-        html.Div([
-            html.Span("Sortino Ratio: ", style={"color": COLORS["text"]}),
-            html.Span(f"{metrics.get('sortino_ratio', 'N/A')}", style={"color": COLORS["blue"], "fontWeight": "bold", "fontSize": "20px"})
-        ], style={"marginBottom": "12px"}),
-        
-        html.Div([
-            html.Span("Max Drawdown: ", style={"color": COLORS["text"]}),
-            html.Span(f"{metrics['max_drawdown']}%", style={"color": COLORS["red"], "fontWeight": "bold", "fontSize": "20px"})
-        ], style={"marginBottom": "12px"}),
-        
-        html.Div([
-            html.Span("Value at Risk (95%): ", style={"color": COLORS["text"]}),
-            html.Span(f"{metrics.get('var_95', 'N/A')}%", style={"color": COLORS["red"], "fontWeight": "bold", "fontSize": "20px"})
-        ], style={"marginBottom": "12px"}),
-        
-        html.Div([
-            html.Span("Ratio Diversification: ", style={"color": COLORS["text"]}),
-            html.Span(f"{metrics.get('diversification_ratio', 'N/A')}", style={"color": COLORS["green"], "fontWeight": "bold", "fontSize": "20px"})
-        ])
-    ])
-
+        alpha_color = COLORS["positive"] if metrics.get("alpha", 0) > 0 else COLORS["negative"]
+        display_metric_line("Alpha", str(metrics.get("alpha", "N/A")) + "%", alpha_color)
 
 def create_main_chart(df_normalized, portfolio_value, colors):
-    """Create main performance chart."""
     fig = go.Figure()
     
-    color_list = [COLORS["blue"], COLORS["green"], COLORS["orange"], COLORS["red"], "#a371f7", "#3fb9a5"]
+    color_palette = [
+        "#3b82f6",
+        "#10b981",
+        "#f59e0b",
+        "#ef4444",
+        "#8b5cf6",
+        "#06b6d4"
+    ]
     
     for i, col in enumerate(df_normalized.columns):
         fig.add_trace(go.Scatter(
             x=df_normalized.index,
             y=df_normalized[col],
             name=col,
-            line=dict(color=color_list[i % len(color_list)], width=1.5)
+            line=dict(
+                color=color_palette[i % len(color_palette)],
+                width=1.5
+            ),
+            opacity=0.6
         ))
     
     fig.add_trace(go.Scatter(
         x=portfolio_value.index,
         y=portfolio_value,
         name="PORTFOLIO",
-        line=dict(color="white", width=3, dash="dash")
+        line=dict(
+            color="#ffffff",
+            width=2.5
+        ),
+        opacity=1.0
     ))
     
     fig.update_layout(
         template="plotly_dark",
         paper_bgcolor=COLORS["card"],
         plot_bgcolor=COLORS["card"],
-        legend=dict(orientation="h", y=1.1),
-        margin=dict(l=40, r=40, t=40, b=40),
-        hovermode="x unified"
+        font=dict(
+            family="'Inter', -apple-system, system-ui, sans-serif",
+            size=11,
+            color=COLORS["text"]
+        ),
+        legend=dict(
+            orientation="h",
+            yanchor="bottom",
+            y=1.02,
+            xanchor="left",
+            x=0,
+            bgcolor="rgba(0,0,0,0)",
+            font=dict(size=10)
+        ),
+        margin=dict(l=50, r=30, t=30, b=50),
+        hovermode="x unified",
+        xaxis=dict(
+            gridcolor=COLORS["border"],
+            showgrid=True,
+            zeroline=False
+        ),
+        yaxis=dict(
+            gridcolor=COLORS["border"],
+            showgrid=True,
+            zeroline=False,
+            title=dict(
+                text="Indexed Value",
+                font=dict(size=10)
+            )
+        )
     )
     
     return fig
 
-
 def create_correlation_heatmap(corr_matrix):
-    """Create correlation matrix heatmap."""
     fig = go.Figure(data=go.Heatmap(
         z=corr_matrix.values,
         x=corr_matrix.columns,
         y=corr_matrix.index,
-        colorscale=[[0, COLORS["red"]], [0.5, "#1a1a1a"], [1, COLORS["green"]]],
+        colorscale=[
+            [0, "#ef4444"],
+            [0.5, "#1f2937"],
+            [1, "#10b981"]
+        ],
         zmin=-1, zmax=1,
         text=np.round(corr_matrix.values, 2),
         texttemplate="%{text}",
-        textfont={"size": 12}
+        textfont={"size": 10, "color": COLORS["text"]},
+        colorbar=dict(
+            title="",
+            titleside="right",
+            tickfont=dict(size=9)
+        )
     ))
     
     fig.update_layout(
         template="plotly_dark",
         paper_bgcolor=COLORS["card"],
         plot_bgcolor=COLORS["card"],
-        margin=dict(l=40, r=40, t=40, b=40)
+        font=dict(
+            family="'Inter', -apple-system, system-ui, sans-serif",
+            size=10,
+            color=COLORS["text"]
+        ),
+        margin=dict(l=70, r=30, t=30, b=70),
+        xaxis=dict(side="bottom", tickfont=dict(size=10)),
+        yaxis=dict(side="left", tickfont=dict(size=10))
     )
     
     return fig
 
-
 def create_weights_pie_chart(weights):
-    """Create pie chart showing portfolio allocation."""
+    colors_list = ["#3b82f6", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6", "#06b6d4"]
+    
     fig = go.Figure(data=[go.Pie(
         labels=list(weights.keys()),
         values=list(weights.values()),
-        hole=0.4,
-        marker_colors=[COLORS["blue"], COLORS["green"], COLORS["orange"], COLORS["red"], "#a371f7"]
+        hole=0.5,
+        marker_colors=colors_list[:len(weights)],
+        textinfo="label+percent",
+        textfont=dict(size=11, color=COLORS["text"]),
+        textposition="outside"
     )])
     
     fig.update_layout(
         template="plotly_dark",
         paper_bgcolor=COLORS["card"],
         plot_bgcolor=COLORS["card"],
+        font=dict(
+            family="'Inter', -apple-system, system-ui, sans-serif",
+            size=10,
+            color=COLORS["text"]
+        ),
         margin=dict(l=20, r=20, t=20, b=20),
-        showlegend=True,
-        legend=dict(orientation="h", y=-0.1)
+        showlegend=False
+    )
+    
+    return fig
+
+def create_drawdown_chart(portfolio_value):
+    running_max = portfolio_value.expanding().max()
+    drawdown = (portfolio_value - running_max) / running_max * 100
+    
+    fig = go.Figure()
+    
+    fig.add_trace(go.Scatter(
+        x=drawdown.index,
+        y=drawdown,
+        fill="tozeroy",
+        name="Drawdown",
+        line=dict(color=COLORS["negative"], width=0),
+        fillcolor="rgba(239, 68, 68, 0.2)"
+    ))
+    
+    fig.update_layout(
+        template="plotly_dark",
+        paper_bgcolor=COLORS["card"],
+        plot_bgcolor=COLORS["card"],
+        font=dict(
+            family="'Inter', -apple-system, system-ui, sans-serif",
+            size=11,
+            color=COLORS["text"]
+        ),
+        margin=dict(l=50, r=30, t=30, b=50),
+        xaxis=dict(
+            gridcolor=COLORS["border"],
+            showgrid=True,
+            zeroline=False
+        ),
+        yaxis=dict(
+            gridcolor=COLORS["border"],
+            showgrid=True,
+            zeroline=True,
+            zerolinecolor=COLORS["border"],
+            title=dict(
+                text="Drawdown (%)",
+                font=dict(size=10)
+            ),
+            tickformat=".1f"
+        ),
+        hovermode="x unified"
     )
     
     return fig
