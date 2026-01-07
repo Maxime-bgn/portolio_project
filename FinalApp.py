@@ -869,7 +869,7 @@ def advanced_analytics_page():
                 with col2:
                     st.markdown("**XGBoost Return Prediction**")
                     st.plotly_chart(ml_results["xgb_fig"], use_container_width=True)
-                    st.metric("Prediction Accuracy (RMSE)", "{0:.6f}".format(ml_results["xgb_rmse"]))
+                    st.metric("RMSE", "{0:.6f}".format(ml_results["xgb_rmse"]))
                 
                 st.markdown("**Feature Importance**")
                 st.plotly_chart(ml_results["importance_fig"], use_container_width=True)
