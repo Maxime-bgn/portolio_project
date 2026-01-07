@@ -1,14 +1,14 @@
 """
-Portfolio Dashboard - Multi-Page Application
+Portfolio Dashboard - Streamlit Version
 Pages: Portfolio | Advanced Analytics
 """
 
-from dash import Dash, html, dcc, callback, Output, Input, State
-import dash_bootstrap_components as dbc
-import plotly.graph_objects as go
+import streamlit as st
 import pandas as pd
 from datetime import datetime
+import plotly.graph_objects as go
 
+# Import de vos modules existants
 from utils.data_fetcher import fetch_multiple_assets, get_current_prices
 from portfolio_module.portfolio_core import (
     create_equal_weights, normalize_weights, portfolio_value,
@@ -24,493 +24,421 @@ from portfolio_module.advanced_analytics import (
     detect_regimes_simple, variance_ratio_test
 )
 
-app = Dash(__name__, external_stylesheets=[dbc.themes.DARKLY], suppress_callback_exceptions=True)
-app.title = "Portfolio Analytics | Quant B"
-server = app.server
+# Configuration de la page
+st.set_page_config(
+    page_title="Portfolio Analytics | Quant B",
+    layout="wide",
+    initial_sidebar_state="collapsed"
+)
 
-REFRESH_INTERVAL = 5 * 60 * 1000
-
-# Navigation
-def create_navbar():
-    return dbc.Nav([
-        dbc.NavItem(dbc.NavLink("PORTFOLIO", href="#", id="nav-portfolio", active=True, 
-                               style={"color": COLORS["text"], "fontWeight": "600"})),
-        dbc.NavItem(dbc.NavLink("ADVANCED ANALYTICS", href="#", id="nav-advanced",
-                               style={"color": COLORS["text"], "fontWeight": "600"})),
-    ], pills=True, style={"marginBottom": "20px"})
-
-
-app.layout = dbc.Container([
-    dcc.Interval(id="refresh-interval", interval=REFRESH_INTERVAL, n_intervals=0),
-    dcc.Store(id="current-page", data="portfolio"),
-    dcc.Store(id="prices-data"),
-    dcc.Store(id="weights-data"),
+# Configuration CSS personnalisée
+st.markdown(f"""
+<style>
+    .stApp {{
+        background-color: {COLORS["background"]};
+    }}
     
+    .main-header {{
+        border-bottom: 1px solid {COLORS["border"]};
+        padding: 24px 0;
+        margin-bottom: 24px;
+    }}
+    
+    .portfolio-card {{
+        background-color: {COLORS["card"]};
+        border-radius: 8px;
+        padding: 20px;
+        border: 1px solid {COLORS["border"]};
+        margin-bottom: 20px;
+    }}
+    
+    .price-card {{
+        background-color: {COLORS["card"]};
+        border-radius: 6px;
+        padding: 15px;
+        border: 1px solid {COLORS["border"]};
+        height: 110px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+    }}
+    
+    .stSelectbox, .stTextInput > div > div > input {{
+        background-color: {COLORS["card"]} !important;
+        color: {COLORS["text"]} !important;
+        border-color: {COLORS["border"]} !important;
+    }}
+    
+    .stSelectbox > div > div {{
+        background-color: {COLORS["card"]} !important;
+        color: {COLORS["text"]} !important;
+    }}
+    
+    .section-title {{
+        color: {COLORS["text"]};
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
+        margin-bottom: 16px;
+    }}
+    
+    .footer {{
+        text-align: center;
+        color: {COLORS["text_secondary"]};
+        font-size: 11px;
+        opacity: 0.7;
+        margin-top: 32px;
+        padding-top: 24px;
+        border-top: 1px solid {COLORS["border"]};
+    }}
+</style>
+""", unsafe_allow_html=True)
+
+# Fonction pour afficher les métriques principales dans Streamlit
+def render_metrics_card_streamlit(metrics):
+    """Affiche les métriques principales du portfolio dans Streamlit"""
+    col1, col2, col3, col4 = st.columns(4)
+    
+    # Retour annualisé
+    with col1:
+        ret_color = COLORS["positive"] if metrics.get("annual_return", 0) >= 0 else COLORS["negative"]
+        st.markdown(f"""
+        <div style="background-color: {COLORS['card']}; border-radius: 6px; padding: 15px; border: 1px solid {COLORS['border']}; height: 100%;">
+            <div style="font-size: 11px; color: {COLORS['text_secondary']}; margin-bottom: 5px;">RETURN</div>
+            <div style="font-size: 22px; font-weight: 600; color: {ret_color}">
+                {metrics.get('annual_return', metrics.get('return', 'N/A'))}%
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    # Volatilité
+    with col2:
+        st.markdown(f"""
+        <div style="background-color: {COLORS['card']}; border-radius: 6px; padding: 15px; border: 1px solid {COLORS['border']}; height: 100%;">
+            <div style="font-size: 11px; color: {COLORS['text_secondary']}; margin-bottom: 5px;">VOLATILITY</div>
+            <div style="font-size: 22px; font-weight: 600; color: {COLORS['warning']}">
+                {metrics.get('volatility', 'N/A')}%
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    # Sharpe Ratio
+    with col3:
+        st.markdown(f"""
+        <div style="background-color: {COLORS['card']}; border-radius: 6px; padding: 15px; border: 1px solid {COLORS['border']}; height: 100%;">
+            <div style="font-size: 11px; color: {COLORS['text_secondary']}; margin-bottom: 5px;">SHARPE RATIO</div>
+            <div style="font-size: 22px; font-weight: 600; color: {COLORS['accent']}">
+                {metrics.get('sharpe_ratio', metrics.get('sharpe', 'N/A'))}
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    # Max Drawdown
+    with col4:
+        st.markdown(f"""
+        <div style="background-color: {COLORS['card']}; border-radius: 6px; padding: 15px; border: 1px solid {COLORS['border']}; height: 100%;">
+            <div style="font-size: 11px; color: {COLORS['text_secondary']}; margin-bottom: 5px;">MAX DRAWDOWN</div>
+            <div style="font-size: 22px; font-weight: 600; color: {COLORS['negative']}">
+                {metrics.get('max_drawdown', 'N/A')}%
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+
+# Initialisation de l'état de session
+if 'current_page' not in st.session_state:
+    st.session_state.current_page = 'portfolio'
+
+# Interface principale
+def main():
     # Header
-    html.Div([
-        html.Div([
-            html.H1("PORTFOLIO ANALYTICS", 
-                    style={
-                        "color": COLORS["text"],
-                        "fontWeight": "700",
-                        "fontSize": "28px",
-                        "marginBottom": "4px",
-                        "letterSpacing": "-0.5px"
-                    }),
-            html.P("Multi-Asset Portfolio Management & Risk Analysis", 
-                   style={
-                       "color": COLORS["text_secondary"],
-                       "fontSize": "14px",
-                       "marginBottom": "8px"
-                   }),
-            html.P(id="last-update", 
-                   style={
-                       "color": COLORS["positive"],
-                       "fontSize": "11px",
-                       "fontWeight": "500"
-                   })
-        ])
-    ], style={
-        "borderBottom": f"1px solid {COLORS['border']}",
-        "padding": "24px 0",
-        "marginBottom": "24px"
-    }),
+    st.markdown(f"""
+    <div class="main-header">
+        <h1 style="color: {COLORS['text']}; font-weight: 700; font-size: 28px; margin-bottom: 4px; letter-spacing: -0.5px;">
+            PORTFOLIO ANALYTICS
+        </h1>
+        <p style="color: {COLORS['text_secondary']}; font-size: 14px; margin-bottom: 8px;">
+            Multi-Asset Portfolio Management & Risk Analysis
+        </p>
+        <p style="color: {COLORS['positive']}; font-size: 11px; font-weight: 500;">
+            Mis a jour: {datetime.now().strftime('%H:%M:%S')}
+        </p>
+    </div>
+    """, unsafe_allow_html=True)
     
     # Navigation
-    create_navbar(),
+    col1, col2 = st.columns([1, 5])
+    with col1:
+        if st.button("PORTFOLIO", use_container_width=True):
+            st.session_state.current_page = 'portfolio'
+            st.rerun()
+    with col2:
+        if st.button("ADVANCED ANALYTICS", use_container_width=True):
+            st.session_state.current_page = 'advanced'
+            st.rerun()
     
-    # Controls
-    html.Div([
-        dbc.Row([
-            dbc.Col([
-                html.Div([
-                    html.Label("Assets (tickers)", style={"color": COLORS["text"]}),
-                    dbc.Input(
-                        id="assets-input", 
-                        value=", ".join(DEFAULT_ASSETS),
-                        style={"backgroundColor": COLORS["card"], "color": COLORS["text"]}
-                    )
-                ], style=CARD_STYLE)
-            ], md=4),
-            
-            dbc.Col([
-                html.Div([
-                    html.Label("Periode", style={"color": COLORS["text"]}),
-                    dcc.Dropdown(
-                        id="period-dropdown",
-                        options=[
-                            {"label": "1 Mois", "value": "1mo"},
-                            {"label": "3 Mois", "value": "3mo"},
-                            {"label": "6 Mois", "value": "6mo"},
-                            {"label": "1 An", "value": "1y"},
-                            {"label": "2 Ans", "value": "2y"}
-                        ],
-                        value="1y",
-                        clearable=False
-                    )
-                ], style=CARD_STYLE)
-            ], md=2),
-            
-            dbc.Col([
-                html.Div([
-                    html.Label("Mode Poids", style={"color": COLORS["text"]}),
-                    dcc.Dropdown(
-                        id="weight-mode",
-                        options=[
-                            {"label": "Egaux", "value": "equal"},
-                            {"label": "Custom", "value": "custom"}
-                        ],
-                        value="equal",
-                        clearable=False
-                    )
-                ], style=CARD_STYLE)
-            ], md=2),
-            
-            dbc.Col([
-                html.Div([
-                    html.Label("Rebalancing", style={"color": COLORS["text"]}),
-                    dcc.Dropdown(
-                        id="rebalancing-freq",
-                        options=[
-                            {"label": "Jamais", "value": "never"},
-                            {"label": "Mensuel", "value": "monthly"},
-                            {"label": "Trimestriel", "value": "quarterly"}
-                        ],
-                        value="never",
-                        clearable=False
-                    )
-                ], style=CARD_STYLE)
-            ], md=2),
-            
-            dbc.Col([
-                html.Div([
-                    html.Label("Benchmark", style={"color": COLORS["text"]}),
-                    dbc.Input(
-                        id="benchmark-input",
-                        value="SPY",
-                        placeholder="Ex: SPY",
-                        style={"backgroundColor": COLORS["card"], "color": COLORS["text"]}
-                    )
-                ], style=CARD_STYLE)
-            ], md=2)
-        ]),
+    st.markdown("<br>", unsafe_allow_html=True)
+    
+    # Contrôles de configuration
+    with st.container():
+        st.markdown('<div class="portfolio-card">', unsafe_allow_html=True)
         
-        html.Div([
-            html.Label("Poids Custom (%)", style={"color": COLORS["text"]}),
-            dbc.Input(
-                id="weights-input",
-                value="20, 20, 20, 20, 20",
-                placeholder="Ex: 30, 25, 20, 15, 10",
-                style={"backgroundColor": COLORS["card"], "color": COLORS["text"]}
+        col1, col2, col3, col4, col5 = st.columns(5)
+        
+        with col1:
+            assets_input = st.text_input(
+                "Assets (tickers)",
+                value=", ".join(DEFAULT_ASSETS),
+                help="Séparer par des virgules: AAPL, GOOGL, MSFT"
             )
-        ], style=CARD_STYLE, id="custom-weights-section"),
         
-    ]),
+        with col2:
+            period = st.selectbox(
+                "Periode",
+                options=["1mo", "3mo", "6mo", "1y", "2y"],
+                index=3,
+                format_func=lambda x: {
+                    "1mo": "1 Mois",
+                    "3mo": "3 Mois", 
+                    "6mo": "6 Mois",
+                    "1y": "1 An",
+                    "2y": "2 Ans"
+                }[x]
+            )
+        
+        with col3:
+            weight_mode = st.selectbox(
+                "Mode Poids",
+                options=["equal", "custom"],
+                index=0,
+                format_func=lambda x: {
+                    "equal": "Egaux",
+                    "custom": "Custom"
+                }[x]
+            )
+        
+        with col4:
+            rebalancing = st.selectbox(
+                "Rebalancing",
+                options=["never", "monthly", "quarterly"],
+                index=0,
+                format_func=lambda x: {
+                    "never": "Jamais",
+                    "monthly": "Mensuel",
+                    "quarterly": "Trimestriel"
+                }[x]
+            )
+        
+        with col5:
+            benchmark = st.text_input(
+                "Benchmark",
+                value="SPY",
+                placeholder="Ex: SPY"
+            )
+        
+        if weight_mode == "custom":
+            weights_input = st.text_input(
+                "Poids Custom (%)",
+                value="20, 20, 20, 20, 20",
+                placeholder="Ex: 30, 25, 20, 15, 10"
+            )
+        else:
+            weights_input = ""
+        
+        st.markdown('</div>', unsafe_allow_html=True)
     
-    # Page content
-    html.Div(id="page-content"),
+    # Parse les inputs
+    assets = [a.strip().upper() for a in assets_input.split(",") if a.strip()]
     
-    # Footer
-    html.Div([
-        html.P([
-            html.Span("Auto-refresh: 5 minutes", style={"marginRight": "20px"}),
-            html.Span("•", style={"marginRight": "20px", "opacity": "0.3"}),
-            html.Span("Quant B Module", style={"marginRight": "20px"}),
-            html.Span("•", style={"marginRight": "20px", "opacity": "0.3"}),
-            html.Span("Professional Portfolio Analytics")
-        ], style={
-            "textAlign": "center",
-            "color": COLORS["text_secondary"],
-            "fontSize": "11px",
-            "opacity": "0.7",
-            "marginTop": "32px",
-            "paddingTop": "24px",
-            "borderTop": f"1px solid {COLORS['border']}"
-        })
-    ])
+    if not assets:
+        st.warning("Veuillez entrer au moins un ticker")
+        return
     
-], fluid=True, style={"backgroundColor": COLORS["background"], 
-                      "minHeight": "100vh", "padding": "20px"})
-
-
-# Callbacks for navigation
-@callback(
-    Output("current-page", "data"),
-    Output("nav-portfolio", "active"),
-    Output("nav-advanced", "active"),
-    Input("nav-portfolio", "n_clicks"),
-    Input("nav-advanced", "n_clicks"),
-    State("current-page", "data")
-)
-def navigate(port_clicks, adv_clicks, current):
-    ctx = dash.callback_context
-    if not ctx.triggered:
-        return "portfolio", True, False
-    
-    button_id = ctx.triggered[0]['prop_id'].split('.')[0]
-    
-    if button_id == "nav-portfolio":
-        return "portfolio", True, False
-    elif button_id == "nav-advanced":
-        return "advanced", False, True
-    
-    return current, current == "portfolio", current == "advanced"
-
-
-@callback(
-    Output("last-update", "children"),
-    Input("refresh-interval", "n_intervals")
-)
-def update_timestamp(n):
-    return f"Mis a jour: {datetime.now().strftime('%H:%M:%S')}"
-
-
-@callback(
-    Output("custom-weights-section", "style"),
-    Input("weight-mode", "value")
-)
-def toggle_custom_weights(mode):
-    style = CARD_STYLE.copy()
-    if mode == "custom":
-        style["display"] = "block"
-    else:
-        style["display"] = "none"
-    return style
-
-
-@callback(
-    Output("page-content", "children"),
-    Input("current-page", "data"),
-    Input("assets-input", "value"),
-    Input("period-dropdown", "value"),
-    Input("weights-input", "value"),
-    Input("weight-mode", "value"),
-    Input("rebalancing-freq", "value"),
-    Input("benchmark-input", "value"),
-    Input("refresh-interval", "n_intervals")
-)
-def render_page(page, assets_str, period, weights_str, weight_mode, rebalancing, benchmark_str, n):
-    if page == "portfolio":
-        return render_portfolio_page(assets_str, period, weights_str, weight_mode, rebalancing, benchmark_str)
-    elif page == "advanced":
-        return render_advanced_page(assets_str, period, weights_str, weight_mode)
-    
-    return html.Div("Page not found")
-
-
-def render_portfolio_page(assets_str, period, weights_str, weight_mode, rebalancing, benchmark_str):
-    """Render the main portfolio page"""
-    
-    empty = html.Div("Enter assets to begin", style={"color": COLORS["text"], "padding": "40px", "textAlign": "center"})
-    
-    if not assets_str:
-        return empty
-    
-    # Parse assets
-    assets = [a.strip().upper() for a in assets_str.split(",") if a.strip()]
-    
-    # Fetch data
+    # Récupération des données
     df = fetch_multiple_assets(assets, period)
-    if df.empty:
-        return html.Div("No data available", style={"color": COLORS["text"], "padding": "40px", "textAlign": "center"})
     
-    # Weights
+    if df.empty:
+        st.error("Impossible de récupérer les données. Vérifiez les tickers.")
+        return
+    
+    # Calcul des poids
     if weight_mode == "equal":
         weights = create_equal_weights(df.columns.tolist())
     else:
         try:
-            weight_values = [float(w.strip()) for w in weights_str.split(",")]
+            weight_values = [float(w.strip()) for w in weights_input.split(",")]
             if len(weight_values) != len(df.columns):
                 weight_values = [100 / len(df.columns)] * len(df.columns)
         except:
             weight_values = [100 / len(df.columns)] * len(df.columns)
         
         total = sum(weight_values)
-        weights = {asset: w / total for asset, w in zip(df.columns, weight_values)}
+        weights = {asset: w/total for asset, w in zip(df.columns, weight_values)}
     
     # Benchmark
     market_returns = None
-    if benchmark_str and benchmark_str.strip():
+    if benchmark and benchmark.strip():
         try:
-            benchmark_df = fetch_multiple_assets([benchmark_str.strip().upper()], period)
+            benchmark_df = fetch_multiple_assets([benchmark.strip().upper()], period)
             if not benchmark_df.empty:
                 market_returns = calculate_returns(benchmark_df).iloc[:, 0]
         except:
             pass
     
-    # Calculate
+    # Affichage selon la page
+    if st.session_state.current_page == 'portfolio':
+        render_portfolio_page(df, assets, weights, rebalancing, market_returns)
+    else:
+        render_advanced_page(df, weights)
+    
+    # Footer
+    st.markdown("""
+    <div class="footer">
+        <p>
+            <span style="margin-right: 20px;">Auto-refresh: 5 minutes</span>
+            <span style="margin-right: 20px; opacity: 0.3;">•</span>
+            <span style="margin-right: 20px;">Quant B Module</span>
+            <span style="margin-right: 20px; opacity: 0.3;">•</span>
+            <span>Professional Portfolio Analytics</span>
+        </p>
+    </div>
+    """, unsafe_allow_html=True)
+
+def render_portfolio_page(df, assets, weights, rebalancing, market_returns):
+    """Affiche la page portfolio"""
+    
+    # Cartes de prix actuels
+    prices = get_current_prices(assets)
+    
+    cols = st.columns(len(prices))
+    for idx, (ticker, info) in enumerate(prices.items()):
+        with cols[idx]:
+            is_positive = info["change"] >= 0
+            change_color = COLORS["positive"] if is_positive else COLORS["negative"]
+            arrow = "▲" if is_positive else "▼"
+            
+            st.markdown(f"""
+            <div class="price-card">
+                <div style="margin-bottom: 8px;">
+                    <span style="color: {COLORS['accent']}; font-weight: 700; font-size: 11px; letter-spacing: 0.5px;">
+                        {ticker}
+                    </span>
+                </div>
+                <div style="margin-bottom: 6px;">
+                    <span style="color: {COLORS['text']}; font-size: 22px; font-weight: 600;">
+                        ${info['price']:.2f}
+                    </span>
+                </div>
+                <div>
+                    <span style="color: {change_color}; font-size: 10px; margin-right: 2px;">
+                        {arrow}
+                    </span>
+                    <span style="color: {change_color}; font-weight: 600; font-size: 13px;">
+                        {abs(info['change']):.2f}%
+                    </span>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+    
+    st.markdown("<br>", unsafe_allow_html=True)
+    
+    # Calculs
     port_value_series = portfolio_value(df, weights, rebalancing_freq=rebalancing)
     analysis = analyze_portfolio(df, weights, market_returns=market_returns)
     analysis["portfolio_value"] = port_value_series
     
-    # Create charts
-    df_norm = (df / df.iloc[0]) * 100
-    main_fig = create_main_chart(df_norm, analysis["portfolio_value"], COLORS)
-    corr_fig = create_correlation_heatmap(analysis["correlation"])
-    alloc_fig = create_weights_pie_chart(weights)
-    drawdown_fig = create_drawdown_chart(analysis["portfolio_value"])
+    # Graphique principal et allocation
+    col1, col2 = st.columns([2, 1])
     
-    # Portfolio metrics
-    portfolio_metrics = create_portfolio_metrics_card(analysis["portfolio"])
+    with col1:
+        st.markdown('<div class="portfolio-card">', unsafe_allow_html=True)
+        st.markdown('<div class="section-title">PERFORMANCE (BASE 100)</div>', unsafe_allow_html=True)
+        
+        # Normalisation des prix
+        df_norm = (df / df.iloc[0]) * 100
+        main_fig = create_main_chart(df_norm, analysis["portfolio_value"], COLORS)
+        st.plotly_chart(main_fig, use_container_width=True)
+        
+        st.markdown('</div>', unsafe_allow_html=True)
     
-    # Asset metrics table
-    am = analysis["assets"]
-    asset_rows = []
-    for asset, data in am.items():
-        ret_col = COLORS["positive"] if data["return"] >= 0 else COLORS["negative"]
+    with col2:
+        st.markdown('<div class="portfolio-card">', unsafe_allow_html=True)
+        st.markdown('<div class="section-title">ALLOCATION</div>', unsafe_allow_html=True)
         
-        row = html.Tr([
-            html.Td(asset, style={"color": COLORS["accent"], "fontWeight": "bold"}),
-            html.Td(f"{data['return']}%", style={"color": ret_col}),
-            html.Td(f"{data['volatility']}%", style={"color": COLORS["warning"]}),
-            html.Td(f"{data['sharpe']}", style={"color": COLORS["accent"]}),
-            html.Td(f"{data['weight']}%", style={"color": COLORS["positive"]})
-        ])
-        asset_rows.append(row)
+        alloc_fig = create_weights_pie_chart(weights)
+        st.plotly_chart(alloc_fig, use_container_width=True)
+        
+        st.markdown('</div>', unsafe_allow_html=True)
     
-    asset_table = html.Table([
-        html.Thead(html.Tr([
-            html.Th("Asset", style={"color": COLORS["text"]}),
-            html.Th("Return", style={"color": COLORS["text"]}),
-            html.Th("Vol", style={"color": COLORS["text"]}),
-            html.Th("Sharpe", style={"color": COLORS["text"]}),
-            html.Th("Weight", style={"color": COLORS["text"]})
-        ])),
-        html.Tbody(asset_rows)
-    ], style={"width": "100%", "color": COLORS["text"]})
+    # Drawdown et corrélation
+    col3, col4 = st.columns(2)
     
-    # Price cards
-    prices = get_current_prices(assets)
-    price_cards = []
-    for ticker, info in prices.items():
-        is_positive = info["change"] >= 0
-        change_color = COLORS["positive"] if is_positive else COLORS["negative"]
-        arrow = "▲" if is_positive else "▼"
+    with col3:
+        st.markdown('<div class="portfolio-card">', unsafe_allow_html=True)
+        st.markdown('<div class="section-title">DRAWDOWN ANALYSIS</div>', unsafe_allow_html=True)
         
-        card = dbc.Col([
-            html.Div([
-                html.Div([
-                    html.Span(ticker, style={
-                        "color": COLORS["accent"],
-                        "fontWeight": "700",
-                        "fontSize": "11px",
-                        "letterSpacing": "0.5px"
-                    }),
-                ], style={"marginBottom": "8px"}),
-                html.Div([
-                    html.Span(f"${info['price']:.2f}", style={
-                        "color": COLORS["text"],
-                        "fontSize": "22px",
-                        "fontWeight": "600"
-                    }),
-                ], style={"marginBottom": "6px"}),
-                html.Div([
-                    html.Span(f"{arrow} ", style={
-                        "color": change_color,
-                        "fontSize": "10px",
-                        "marginRight": "2px"
-                    }),
-                    html.Span(f"{abs(info['change']):.2f}%", style={
-                        "color": change_color,
-                        "fontWeight": "600",
-                        "fontSize": "13px"
-                    })
-                ])
-            ], style={
-                **CARD_STYLE,
-                "minHeight": "110px",
-                "display": "flex",
-                "flexDirection": "column",
-                "justifyContent": "space-between"
-            })
-        ], md=2, sm=4, xs=6)
-        price_cards.append(card)
+        drawdown_fig = create_drawdown_chart(analysis["portfolio_value"])
+        st.plotly_chart(drawdown_fig, use_container_width=True)
+        
+        st.markdown('</div>', unsafe_allow_html=True)
     
-    return html.Div([
-        # Price cards
-        html.Div(dbc.Row(children=price_cards), style={"marginBottom": "20px"}),
+    with col4:
+        st.markdown('<div class="portfolio-card">', unsafe_allow_html=True)
+        st.markdown('<div class="section-title">CORRELATION MATRIX</div>', unsafe_allow_html=True)
         
-        # Main charts
-        dbc.Row([
-            dbc.Col([
-                html.Div([
-                    html.H5("PERFORMANCE (BASE 100)", style={
-                        "color": COLORS["text"],
-                        "fontSize": "12px",
-                        "fontWeight": "700",
-                        "letterSpacing": "0.5px",
-                        "textTransform": "uppercase",
-                        "marginBottom": "16px"
-                    }),
-                    dcc.Graph(figure=main_fig, style={"height": "400px"})
-                ], style=CARD_STYLE)
-            ], md=8),
-            
-            dbc.Col([
-                html.Div([
-                    html.H5("ALLOCATION", style={
-                        "color": COLORS["text"],
-                        "fontSize": "12px",
-                        "fontWeight": "700",
-                        "letterSpacing": "0.5px",
-                        "textTransform": "uppercase",
-                        "marginBottom": "16px"
-                    }),
-                    dcc.Graph(figure=alloc_fig, style={"height": "400px"})
-                ], style=CARD_STYLE)
-            ], md=4)
-        ]),
+        corr_fig = create_correlation_heatmap(analysis["correlation"])
+        st.plotly_chart(corr_fig, use_container_width=True)
         
-        # Secondary charts
-        dbc.Row([
-            dbc.Col([
-                html.Div([
-                    html.H5("DRAWDOWN ANALYSIS", style={
-                        "color": COLORS["text"],
-                        "fontSize": "12px",
-                        "fontWeight": "700",
-                        "letterSpacing": "0.5px",
-                        "textTransform": "uppercase",
-                        "marginBottom": "16px"
-                    }),
-                    dcc.Graph(figure=drawdown_fig, style={"height": "300px"})
-                ], style=CARD_STYLE)
-            ], md=6),
-            
-            dbc.Col([
-                html.Div([
-                    html.H5("CORRELATION MATRIX", style={
-                        "color": COLORS["text"],
-                        "fontSize": "12px",
-                        "fontWeight": "700",
-                        "letterSpacing": "0.5px",
-                        "textTransform": "uppercase",
-                        "marginBottom": "16px"
-                    }),
-                    dcc.Graph(figure=corr_fig, style={"height": "300px"})
-                ], style=CARD_STYLE)
-            ], md=6)
-        ]),
-        
-        # Metrics
-        dbc.Row([
-            dbc.Col([
-                html.Div([
-                    html.H5("PORTFOLIO METRICS", style={
-                        "color": COLORS["text"],
-                        "fontSize": "12px",
-                        "fontWeight": "700",
-                        "letterSpacing": "0.5px",
-                        "textTransform": "uppercase",
-                        "marginBottom": "16px"
-                    }),
-                    portfolio_metrics
-                ], style=CARD_STYLE)
-            ], md=5),
-            
-            dbc.Col([
-                html.Div([
-                    html.H5("ASSET BREAKDOWN", style={
-                        "color": COLORS["text"],
-                        "fontSize": "12px",
-                        "fontWeight": "700",
-                        "letterSpacing": "0.5px",
-                        "textTransform": "uppercase",
-                        "marginBottom": "16px"
-                    }),
-                    asset_table
-                ], style=CARD_STYLE)
-            ], md=7)
-        ]),
-    ])
+        st.markdown('</div>', unsafe_allow_html=True)
+    
+    # Métriques du portfolio (version simplifiée)
+    st.markdown('<div class="portfolio-card">', unsafe_allow_html=True)
+    st.markdown('<div class="section-title">PORTFOLIO METRICS</div>', unsafe_allow_html=True)
+    
+    render_metrics_card_streamlit(analysis["portfolio"])
+    
+    # Métriques détaillées dans un expander
+    with st.expander("Voir les métriques détaillées"):
+        create_portfolio_metrics_card(analysis["portfolio"])
+    
+    st.markdown('</div>', unsafe_allow_html=True)
+    
+    # Tableau des actifs
+    st.markdown('<div class="portfolio-card">', unsafe_allow_html=True)
+    st.markdown('<div class="section-title">ASSET BREAKDOWN</div>', unsafe_allow_html=True)
+    
+    # Préparation des données pour le tableau
+    asset_data = []
+    for asset, metrics in analysis["assets"].items():
+        asset_data.append({
+            'Asset': asset,
+            'Return (%)': f"{metrics['return']:.2f}",
+            'Volatility (%)': f"{metrics['volatility']:.2f}",
+            'Sharpe Ratio': f"{metrics['sharpe']:.2f}",
+            'Weight (%)': f"{metrics['weight']:.2f}"
+        })
+    
+    df_assets = pd.DataFrame(asset_data)
+    
+    # Afficher le tableau
+    st.dataframe(df_assets, use_container_width=True, hide_index=True)
+    
+    st.markdown('</div>', unsafe_allow_html=True)
 
-
-def render_advanced_page(assets_str, period, weights_str, weight_mode):
-    """Render the advanced analytics page"""
+def render_advanced_page(df, weights):
+    """Affiche la page d'analyse avancée"""
     
-    if not assets_str:
-        return html.Div("Configure portfolio first", style={"color": COLORS["text"], "padding": "40px", "textAlign": "center"})
+    st.markdown('<div class="portfolio-card">', unsafe_allow_html=True)
+    st.markdown(f"""
+    <h4 style="color: {COLORS['text']}; font-size: 18px; font-weight: 700; margin-bottom: 8px;">
+        ADVANCED ANALYTICS
+    </h4>
+    <p style="color: {COLORS['text_secondary']}; font-size: 12px; margin-bottom: 20px;">
+        Multi-scale analysis based on ESILV Market Risk course
+    </p>
+    """, unsafe_allow_html=True)
     
-    assets = [a.strip().upper() for a in assets_str.split(",") if a.strip()]
-    df = fetch_multiple_assets(assets, period)
-    
-    if df.empty:
-        return html.Div("No data", style={"color": COLORS["text"], "padding": "40px", "textAlign": "center"})
-    
-    # Parse weights
-    if weight_mode == "equal":
-        weights = create_equal_weights(df.columns.tolist())
-    else:
-        try:
-            weight_values = [float(w.strip()) for w in weights_str.split(",")]
-            if len(weight_values) != len(df.columns):
-                weight_values = [100 / len(df.columns)] * len(df.columns)
-        except:
-            weight_values = [100 / len(df.columns)] * len(df.columns)
-        
-        total = sum(weight_values)
-        weights = {asset: w / total for asset, w in zip(df.columns, weight_values)}
-    
+    # Calculs
     returns = calculate_returns(df)
     
     # Portfolio returns
@@ -564,25 +492,30 @@ def render_advanced_page(assets_str, period, weights_str, weight_mode):
     
     # Multi-scale variance
     msv = multi_scale_variance(portfolio_returns)
-    
+
     fig_msv = go.Figure()
-    fig_msv.add_trace(go.Scatter(
-        x=msv['scale'],
-        y=msv['annualized_vol'],
-        mode='lines+markers',
-        line=dict(color=COLORS["accent"], width=2),
-        marker=dict(size=8)
-    ))
+
+    # Utilisez 'var_ratio' au lieu de 'annualized_vol'
+    if not msv.empty and 'var_ratio' in msv.columns:
+        fig_msv.add_trace(go.Scatter(
+            x=msv['scale'],
+            y=msv['var_ratio'],  # <-- CHANGER ICI
+            mode='lines+markers',
+            line=dict(color=COLORS["accent"], width=2),
+            marker=dict(size=8)
+        ))
     
-    fig_msv.update_layout(
-        template="plotly_dark",
-        paper_bgcolor=COLORS["card"],
-        plot_bgcolor=COLORS["card"],
-        font=dict(family="'Inter', sans-serif", size=11, color=COLORS["text"]),
-        margin=dict(l=50, r=30, t=30, b=50),
-        xaxis=dict(title="Time Scale (days)"),
-        yaxis=dict(title="Annualized Volatility (%)")
-    )
+        fig_msv.update_layout(
+            template="plotly_dark",
+            paper_bgcolor=COLORS["card"],
+            plot_bgcolor=COLORS["card"],
+            font=dict(family="'Inter', sans-serif", size=11, color=COLORS["text"]),
+            margin=dict(l=50, r=30, t=30, b=50),
+            xaxis=dict(title="Time Scale (days)"),
+            yaxis=dict(title="Variance Ratio (vs daily)")  # <-- CHANGER ICI
+        )
+    else:
+        st.warning("Données insuffisantes pour l'analyse multi-échelle")
     
     # Regime detection
     port_prices = portfolio_value(df, weights)
@@ -599,12 +532,19 @@ def render_advanced_page(assets_str, period, weights_str, weight_mode):
         'Unknown': COLORS["text_secondary"]
     }
     
+    # S'assurer que les index correspondent
+    valid_data = regimes[regimes.index.isin(port_prices.index)]
+    
     for regime_name in ['Bull', 'Bear', 'High Vol', 'Sideways']:
-        regime_mask = regimes == regime_name
+        regime_mask = valid_data == regime_name
         if regime_mask.sum() > 0:
+            # Filtrer les données pour correspondre aux index
+            regime_indices = valid_data.index[regime_mask]
+            valid_prices = port_prices[port_prices.index.isin(regime_indices)]
+            
             fig_regimes.add_trace(go.Scatter(
-                x=port_prices.index[regime_mask],
-                y=port_prices[regime_mask],
+                x=valid_prices.index,
+                y=valid_prices.values,
                 mode='markers',
                 name=regime_name,
                 marker=dict(color=regime_colors[regime_name], size=4)
@@ -619,153 +559,75 @@ def render_advanced_page(assets_str, period, weights_str, weight_mode):
         yaxis=dict(title="Portfolio Value"),
         legend=dict(orientation="h", y=1.1)
     )
-    
+        
     # Variance ratio test
     vr_test = variance_ratio_test(portfolio_returns)
     
-    vr_table_rows = []
-    for _, row in vr_test.iterrows():
-        color = COLORS["positive"] if row['interpretation'] == 'Random Walk' else COLORS["warning"]
-        vr_table_rows.append(html.Tr([
-            html.Td(f"{row['lag']} days", style={"color": COLORS["text"]}),
-            html.Td(f"{row['variance_ratio']:.3f}", style={"color": color}),
-            html.Td(f"{row['z_statistic']:.2f}", style={"color": COLORS["text_secondary"]}),
-            html.Td(row['interpretation'], style={"color": color, "fontWeight": "bold"})
-        ]))
+    # Hurst chart et interpretation
+    col1, col2 = st.columns([2, 1])
     
-    vr_table = html.Table([
-        html.Thead(html.Tr([
-            html.Th("Lag", style={"color": COLORS["text"]}),
-            html.Th("VR", style={"color": COLORS["text"]}),
-            html.Th("Z-stat", style={"color": COLORS["text"]}),
-            html.Th("Interpretation", style={"color": COLORS["text"]})
-        ])),
-        html.Tbody(vr_table_rows)
-    ], style={"width": "100%", "color": COLORS["text"]})
+    with col1:
+        st.markdown('<div class="section-title">HURST EXPONENT BY ASSET</div>', unsafe_allow_html=True)
+        st.plotly_chart(fig_hurst, use_container_width=True)
     
-    # Interpretation card
-    interpretation_text = f"""
-    Portfolio Hurst Exponent: {H_portfolio:.3f}
-    
-    Interpretation:
-    - H > 0.55: Persistent (trending behavior, momentum)
-    - H = 0.50: Random walk (efficient market)
-    - H < 0.45: Anti-persistent (mean-reverting)
-    
-    Your portfolio shows {"PERSISTENT" if H_portfolio > 0.55 else "RANDOM WALK" if 0.45 <= H_portfolio <= 0.55 else "ANTI-PERSISTENT"} behavior.
-    """
-    
-    return html.Div([
-        # Header with explanation
-        html.Div([
-            html.H4("ADVANCED ANALYTICS", style={
-                "color": COLORS["text"],
-                "fontSize": "18px",
-                "fontWeight": "700",
-                "marginBottom": "8px"
-            }),
-            html.P("Multi-scale analysis based on ESILV Market Risk course", style={
-                "color": COLORS["text_secondary"],
-                "fontSize": "12px",
-                "marginBottom": "20px"
-            })
-        ]),
+    with col2:
+        st.markdown('<div class="section-title">INTERPRETATION</div>', unsafe_allow_html=True)
         
-        # Hurst Exponent
-        dbc.Row([
-            dbc.Col([
-                html.Div([
-                    html.H5("HURST EXPONENT BY ASSET", style={
-                        "color": COLORS["text"],
-                        "fontSize": "12px",
-                        "fontWeight": "700",
-                        "letterSpacing": "0.5px",
-                        "textTransform": "uppercase",
-                        "marginBottom": "16px"
-                    }),
-                    dcc.Graph(figure=fig_hurst, style={"height": "350px"})
-                ], style=CARD_STYLE)
-            ], md=8),
-            
-            dbc.Col([
-                html.Div([
-                    html.H5("INTERPRETATION", style={
-                        "color": COLORS["text"],
-                        "fontSize": "12px",
-                        "fontWeight": "700",
-                        "letterSpacing": "0.5px",
-                        "textTransform": "uppercase",
-                        "marginBottom": "16px"
-                    }),
-                    html.Pre(interpretation_text, style={
-                        "color": COLORS["text"],
-                        "fontSize": "11px",
-                        "whiteSpace": "pre-wrap",
-                        "fontFamily": "monospace"
-                    })
-                ], style=CARD_STYLE)
-            ], md=4)
-        ]),
-        
-        # Multi-scale variance
-        dbc.Row([
-            dbc.Col([
-                html.Div([
-                    html.H5("MULTI-SCALE VARIANCE", style={
-                        "color": COLORS["text"],
-                        "fontSize": "12px",
-                        "fontWeight": "700",
-                        "letterSpacing": "0.5px",
-                        "textTransform": "uppercase",
-                        "marginBottom": "16px"
-                    }),
-                    dcc.Graph(figure=fig_msv, style={"height": "350px"})
-                ], style=CARD_STYLE)
-            ], md=6),
-            
-            dbc.Col([
-                html.Div([
-                    html.H5("VARIANCE RATIO TEST", style={
-                        "color": COLORS["text"],
-                        "fontSize": "12px",
-                        "fontWeight": "700",
-                        "letterSpacing": "0.5px",
-                        "textTransform": "uppercase",
-                        "marginBottom": "16px"
-                    }),
-                    vr_table,
-                    html.P("Lo-MacKinlay test for random walk hypothesis", style={
-                        "color": COLORS["text_secondary"],
-                        "fontSize": "10px",
-                        "marginTop": "12px"
-                    })
-                ], style=CARD_STYLE)
-            ], md=6)
-        ]),
-        
-        # Regime detection
-        dbc.Row([
-            dbc.Col([
-                html.Div([
-                    html.H5("REGIME DETECTION", style={
-                        "color": COLORS["text"],
-                        "fontSize": "12px",
-                        "fontWeight": "700",
-                        "letterSpacing": "0.5px",
-                        "textTransform": "uppercase",
-                        "marginBottom": "16px"
-                    }),
-                    dcc.Graph(figure=fig_regimes, style={"height": "400px"}),
-                    html.P("Simple regime classification based on rolling statistics", style={
-                        "color": COLORS["text_secondary"],
-                        "fontSize": "10px",
-                        "marginTop": "12px"
-                    })
-                ], style=CARD_STYLE)
-            ], md=12)
-        ]),
-    ])
+        interpretation_text = f"""Portfolio Hurst Exponent: {H_portfolio:.3f}
 
+Interpretation:
+- H > 0.55: Persistent (trending behavior, momentum)
+- H = 0.50: Random walk (efficient market)
+- H < 0.45: Anti-persistent (mean-reverting)
 
-if __name__ == '__main__':
-    app.run(debug=True)
+Your portfolio shows {"PERSISTENT" if H_portfolio > 0.55 else "RANDOM WALK" if 0.45 <= H_portfolio <= 0.55 else "ANTI-PERSISTENT"} behavior."""
+        
+        st.text_area("", interpretation_text, height=200, 
+                    label_visibility="collapsed",
+                    disabled=True)
+    
+    st.markdown('</div>', unsafe_allow_html=True)
+    
+    # Multi-scale variance et variance ratio
+    col3, col4 = st.columns(2)
+    
+    with col3:
+        st.markdown('<div class="portfolio-card">', unsafe_allow_html=True)
+        st.markdown('<div class="section-title">MULTI-SCALE VARIANCE</div>', unsafe_allow_html=True)
+        st.plotly_chart(fig_msv, use_container_width=True)
+        st.markdown('</div>', unsafe_allow_html=True)
+    
+    with col4:
+        st.markdown('<div class="portfolio-card">', unsafe_allow_html=True)
+        st.markdown('<div class="section-title">VARIANCE RATIO TEST</div>', unsafe_allow_html=True)
+        
+        if not vr_test.empty:
+            vr_display = vr_test.copy()
+            vr_display.columns = ['Lag (days)', 'Variance Ratio', 'Z-statistic', 'Interpretation']
+            st.dataframe(vr_display, use_container_width=True, hide_index=True)
+        else:
+            st.info("Données insuffisantes pour le test de variance ratio")
+        
+        st.markdown("""
+        <p style="color: #8b949e; font-size: 10px; margin-top: 12px;">
+            Lo-MacKinlay test for random walk hypothesis
+        </p>
+        """, unsafe_allow_html=True)
+        
+        st.markdown('</div>', unsafe_allow_html=True)
+    
+    # Régime detection
+    st.markdown('<div class="portfolio-card">', unsafe_allow_html=True)
+    st.markdown('<div class="section-title">REGIME DETECTION</div>', unsafe_allow_html=True)
+    st.plotly_chart(fig_regimes, use_container_width=True)
+    
+    st.markdown("""
+    <p style="color: #8b949e; font-size: 10px; margin-top: 12px;">
+        Simple regime classification based on rolling statistics
+    </p>
+    """, unsafe_allow_html=True)
+    
+    st.markdown('</div>', unsafe_allow_html=True)
+
+if __name__ == "__main__":
+    main()

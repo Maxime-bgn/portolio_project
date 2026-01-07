@@ -1,34 +1,16 @@
 """
 Advanced Analytics Module
 Hurst exponent, multi-scale variance, regime detection
-Based on ESILV Market Risk course 2024-2025
+Based Market Risk course 2024-2025
 """
 
 import pandas as pd
 import numpy as np
 from scipy import stats
 
-
+## According to Mr garcin courses (market risk)
 def estimate_hurst_exponent(returns):
-    """
-    Estimate Hurst exponent using course formula.
     
-    Based on ESILV Market Risk course:
-    Var(tau) = sigma^2 * tau^(2H)
-    
-    Estimator: H = (1/2) * log2(M'2 / M2)
-    where M2 is variance at resolution N, M'2 at resolution N/2
-    
-    H = 0.5: random walk (Brownian motion)
-    H > 0.5: persistent (trending, positive autocorrelation)
-    H < 0.5: anti-persistent (mean-reverting, negative autocorrelation)
-    
-    Args:
-        returns: Series of returns
-        
-    Returns:
-        H: Hurst exponent
-    """
     N = len(returns)
     
     if N < 4:
@@ -64,21 +46,6 @@ def estimate_hurst_exponent(returns):
 
 
 def multi_scale_variance(returns, scales=None):
-    """
-    Calculate variance at multiple time scales.
-    
-    Based on ESILV course: Var(tau) = sigma^2 * tau^(2H)
-    For H=0.5 (random walk): Var(tau) = sigma^2 * tau
-    
-    Course also mentions: volatility annualization factor is tau^H (not sqrt(tau))
-    
-    Args:
-        returns: Series of returns
-        scales: List of time scales (in days)
-        
-    Returns:
-        DataFrame with scales and corresponding variances
-    """
     if scales is None:
         scales = [1, 5, 10, 20, 60]
     
@@ -91,7 +58,7 @@ def multi_scale_variance(returns, scales=None):
         if scale >= len(returns):
             continue
             
-        # Non-overlapping aggregated returns (as per course)
+        # Non-overlapping aggregated returns 
         aggregated = []
         for i in range(0, len(returns) - scale + 1, scale):
             if i + scale <= len(returns):
@@ -119,29 +86,11 @@ def multi_scale_variance(returns, scales=None):
 
 
 def detect_regimes_simple(prices, window=60):
-    """
-    Simple regime detection based on rolling statistics.
-    
-    Regimes:
-    - Bull: positive trend + low volatility
-    - Bear: negative trend + low volatility  
-    - High Vol: high volatility regardless of trend
-    - Sideways: low trend + low volatility
-    
-    Args:
-        prices: Series of prices
-        window: Rolling window for statistics
-        
-    Returns:
-        Series of regime labels
-    """
     returns = prices.pct_change().dropna()
     
     # Rolling statistics
     rolling_mean = returns.rolling(window).mean()
     rolling_std = returns.rolling(window).std()
-    
-    # Thresholds
     trend_threshold = 0.0005  # 0.05% per day
     vol_threshold = rolling_std.median()
     
@@ -165,40 +114,21 @@ def detect_regimes_simple(prices, window=60):
             regime = 'Sideways'
         
         regimes.append(regime)
-    
     return pd.Series(regimes, index=rolling_mean.index)
 
-
+#VR(q) > 1: positive autocorrelation (momentum)
+# VR(q) < 1: negative autocorrelation (mean reversion)
 def variance_ratio_test(returns, lags=None):
-    """
-    Variance ratio test (Lo-MacKinlay).
-    Tests if returns follow random walk.
-    
-    From course: VR(q) should equal 1 under random walk hypothesis
-    VR(q) > 1: positive autocorrelation (momentum)
-    VR(q) < 1: negative autocorrelation (mean reversion)
-    
-    Args:
-        returns: Series of returns
-        lags: List of lag periods to test
-        
-    Returns:
-        DataFrame with variance ratios and test statistics
-    """
     if lags is None:
         lags = [2, 5, 10, 20]
     
     results = []
-    
-    # Base variance (1-period)
     var_1 = returns.var()
     n = len(returns)
     
     for q in lags:
         if q >= n:
             continue
-        
-        # q-period returns
         q_returns = []
         for i in range(0, n - q, q):
             q_ret = returns.iloc[i:i+q].sum()
@@ -208,13 +138,9 @@ def variance_ratio_test(returns, lags=None):
             continue
             
         var_q = np.var(q_returns)
-        
-        # Variance ratio
         vr = var_q / (q * var_1) if var_1 > 0 else 1
         
         # Test statistic (simplified)
-        # Under random walk: VR should be 1
-        # Standard error approximation
         se = np.sqrt((2 * (q - 1)) / (3 * q * n))
         z_stat = (vr - 1) / se if se > 0 else 0
         
@@ -235,13 +161,6 @@ def variance_ratio_test(returns, lags=None):
 
 
 def fractional_differencing_check(returns):
-    """
-    Check if returns need fractional differencing.
-    Based on Hurst exponent.
-    
-    Returns:
-        dict with H and recommendation
-    """
     H = estimate_hurst_exponent(returns)
     
     if H > 0.55:
