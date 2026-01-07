@@ -1,4 +1,4 @@
-"""
+""""
 Unified Quant Dashboard - Streamlit Version
 Single Asset Only
 """
@@ -53,9 +53,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# ---------------------------------------------------------------------
 # SINGLE ASSET MODULE
-# ---------------------------------------------------------------------
 
 def render_quant_a():
     """Single-Asset Backtester"""
@@ -172,9 +170,6 @@ def render_quant_a():
     except Exception as e:
         st.error(f"Error: {e}")
 
-# ---------------------------------------------------------------------
-# MAIN
-# ---------------------------------------------------------------------
 
 def main():
     render_quant_a()
