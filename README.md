@@ -23,6 +23,7 @@ quant_b_final/
 └── utils/
     ├── data_fetcher.py             # Price data (Yahoo Finance)
     └── daily_report.py             # Daily report script (cron)
+```
 Installation
 bash
 Copy code
