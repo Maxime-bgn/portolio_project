@@ -1,98 +1,106 @@
-Here's a clean, professional README in pure Markdown format suitable for a GitHub repository:
-markdown# Quantitative Finance Dashboards
+# portolio_project
+# Single Asset Strategy Dashboard (Streamlit)
 
-Two interactive applications built with Streamlit for quantitative analysis and portfolio management.
+Interactive dashboard to test and compare systematic trading strategies on a single asset.
+
+## Overview
+This app allows you to:
+- Fetch and visualise price data for one ticker
+- Backtest trading strategies
+- Inspect cumulative performance and drawdowns
+- Compare results against Buy & Hold
 
 ---
 
-## 1. Single Asset Strategy Dashboard
-
-Backtesting platform for systematic trading strategies on individual securities.
-
-### Features
-
-- **Fetch & Visualize**: Historical data retrieval and price visualization
-- **Backtesting**: Test strategies based on defined trading rules
-- **Performance**: Evaluation of cumulative returns and drawdowns
-- **Benchmark**: Systematic comparison against Buy & Hold strategy
-
-### Integrated Strategies
-
-- Buy & Hold
-- End-of-Month & Volatility Breakout
-- Trend Following (Golden Cross, MACD Crossover)
-- RSI Oversold
-
-### Calculated Metrics
-
-- Total and annualized returns
-- Volatility and Sharpe Ratio
-- Maximum Drawdown and recovery time
-
-### Module Structure
-```
+## Structure
 single_asset/
-├── data_fetcher.py  # Historical price retrieval
-├── strategies.py    # Trading rule implementation
-├── charts.py        # Visualization functions
-├── metrics.py       # Performance calculations
-└── app.py           # Streamlit interface
-```
+├── data_fetcher.py # Retrieve historical prices
+├── strategies.py # Trading strategy implementations
+├── charts.py # Plotting functions
+├── metrics.py # Performance metrics (Sharpe, DD, etc.)
+└── app.py # Streamlit frontend
 
-### Launch
+yaml
+Copy code
+
+---
+
+## Installation
 ```bash
 pip install streamlit pandas numpy yfinance plotly
 streamlit run single_asset/app.py
-```
+Default URL:
+http://localhost:8501
+
+Included Strategies
+Buy and Hold
+
+End-of-Month
+
+Volatility Breakout
+
+Trend Following
+
+Golden Cross
+
+RSI Oversold
+
+MACD Crossover
+
+Metrics
+Total and annualised return
+
+Volatility
+
+Sharpe ratio
+
+Max drawdown
+
+Recovery time
+
+Notes
+Designed for educational and testing purposes.
+Perfect for analysing behaviour of a single ticker through a variety of rule-based signals.
+
+yaml
+Copy code
 
 ---
 
-## 2. Quant B – Multi-Asset Portfolio Dashboard
+#  README – **Multi-Asset Portfolio Dashboard** (`FinalApp.py` / `portfolio_module`)
 
-Multi-asset portfolio analysis platform with advanced risk diagnostics.
+```markdown
+# Quant B – Portfolio Analytics Dashboard (Streamlit)
 
-### Features
+Multi-asset portfolio analytics platform with performance, risk, allocation, and advanced statistical tools.
 
-- **Portfolio Analytics**: Risk and return statistics calculation
-- **Allocation**: Asset distribution visualization
-- **Risk Management**: Correlation analysis, VaR (Value at Risk), and CVaR
-- **Advanced Analytics**: Hurst exponent, Variance Ratio, and regime detection
+## Overview
+This dashboard allows you to:
+- Build multi-ticker portfolios
+- Compute performance and risk metrics
+- Analyse drawdowns, correlations, and asset contribution
+- Run advanced regime and volatility diagnostics
 
-### Detected Market Regimes
+---
 
-- Bull / Bear
-- Sideways (Lateral)
-- High Volatility
-
-### Advanced Metrics
-
-- Ratios: Sharpe, Sortino, Calmar
-- Alpha and Beta relative to benchmark
-- Correlation matrix
-
-### Module Structure
-```
-FinalApp.py              # Main interface
+## Structure
+FinalApp.py # Main Streamlit interface
 portfolio_module/
-├── portfolio_core.py    # Core metrics
-├── advanced_analytics.py # Hurst, variance ratio, regimes
-└── components.py        # UI components
+portfolio_core.py # Core calculations
+advanced_analytics.py # Hurst, variance ratio, regimes
+components.py # UI + charts
 utils/
-└── data_fetcher.py      # Yahoo Finance data management
-```
+data_fetcher.py # Yahoo Finance data
+reports/ # Report outputs (optional)
 
-### Launch
+yaml
+Copy code
+
+---
+
+## Installation
 ```bash
 pip install streamlit pandas numpy yfinance plotly scipy
 streamlit run FinalApp.py
-```
-
----
-
-## Technical Stack
-
-- **Language**: Python
-- **Interface**: Streamlit
-- **Data Analysis**: Pandas, NumPy, SciPy
-- **Visualization**: Plotly
-- **Data Source**: Yahoo Finance API
+Access via:
+http://localhost:8501
