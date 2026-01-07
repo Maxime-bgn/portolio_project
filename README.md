@@ -11,11 +11,16 @@ Collection of two Streamlit dashboards:
 Interactive dashboard to test and compare systematic strategies on a single ticker.
 
 ### Overview
-This app allows you to:
-- Fetch and visualise price data
-- Backtest rule-based strategies
-- Evaluate cumulative performance and drawdowns
-- Benchmark against Buy & Hold
+Fetch and visualise price data
+
+Backtest rule-based strategies
+
+Evaluate cumulative performance and drawdowns
+
+Benchmark against Buy & Hold
+
+shell
+Copy code
 
 ### Structure
 single_asset/
@@ -25,53 +30,57 @@ single_asset/
 ├── metrics.py # Performance metrics (Sharpe, DD, etc.)
 └── app.py # Streamlit frontend
 
-bash
+shell
 Copy code
 
 ### Installation
-
 pip install streamlit pandas numpy yfinance plotly
 streamlit run single_asset/app.py
-Default URL:
 
-arduino
+shell
 Copy code
+
+### Default URL
 http://localhost:8501
-Included Strategies
+
+shell
+Copy code
+
+### Included Strategies
 Buy & Hold
-
 End-of-Month
-
 Volatility Breakout
-
 Trend Following
-
 Golden Cross
-
 RSI Oversold
-
 MACD Crossover
 
-Metrics
+shell
+Copy code
+
+### Metrics
 Total return / Annualised return
-
 Volatility
-
 Sharpe ratio
-
 Max drawdown
-
 Recovery time
 
-Notes
+shell
+Copy code
+
+### Notes
 Designed for strategy testing and educational purposes.
 
-Quant B – Multi-Asset Portfolio Dashboard
+yaml
+Copy code
+
+---
+
+## Quant B – Multi-Asset Portfolio Dashboard
+
 Multi-asset portfolio analytics platform with performance, allocation, and risk diagnostics.
 
-Overview
-This dashboard allows you to:
-
+### Overview
 Build and analyse portfolios
 
 Compute risk/return statistics
@@ -80,54 +89,58 @@ Explore drawdowns and correlations
 
 Run advanced analytics (Hurst, regime detection)
 
-Structure
-bash
+shell
 Copy code
-FinalApp.py                # Main Streamlit interface
+
+### Structure
+FinalApp.py # Main Streamlit interface
 portfolio_module/
-├── portfolio_core.py      # Core risk/return metrics
-├── advanced_analytics.py  # Hurst, variance ratio, regimes
-└── components.py          # UI + charts
+├── portfolio_core.py # Core risk/return metrics
+├── advanced_analytics.py # Hurst, variance ratio, regimes
+└── components.py # UI + charts
 utils/
-└── data_fetcher.py        # Yahoo Finance data
-reports/                   # Optional generated reports
-Installation
-bash
+└── data_fetcher.py # Yahoo Finance data
+reports/ # Optional generated reports
+
+shell
 Copy code
+
+### Installation
 pip install streamlit pandas numpy yfinance plotly scipy
 streamlit run FinalApp.py
-Open in browser:
 
-arduino
+shell
 Copy code
+
+### Default URL
 http://localhost:8501
-Features
+
+shell
+Copy code
+
+### Features
 Performance (base 100)
-
 Allocation by asset
-
 Drawdown curve + statistics
-
 Correlation matrix
 
-Metrics:
+shell
+Copy code
 
+### Metrics
 Annualised return/volatility
-
 Sharpe, Sortino, Calmar
-
 Max drawdown
-
 VaR, CVaR
-
 Beta/Alpha vs benchmark
 
-Advanced analytics:
+shell
+Copy code
 
+### Advanced analytics
 Hurst exponent
-
 Multi-timeframe variance
-
 Variance Ratio test
+Bull / Bear / Sideways / High Volatility regimes
 
-Bull/Bear/Sideways/High Vol regimes
+Copy code
