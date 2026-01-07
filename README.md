@@ -29,10 +29,6 @@ quant_b_final/
 
 ## Installation
 ```bash
-# Virtual env (optional)
-python3 -m venv .venv
-source .venv/bin/activate       # Windows: .venv\Scripts\activate
-
 # Dependencies
 pip install streamlit plotly pandas numpy yfinance scipy
 
