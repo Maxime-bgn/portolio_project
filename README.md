@@ -18,7 +18,7 @@ The app retrieves market data, generates trading signals, simulates portfolio ev
 - Modular and extensible code structure
 
 ## Project Structure
-
+```
 portfolio_project/
 │
 ├── app.py # Streamlit user interface and workflow
@@ -32,7 +32,7 @@ portfolio_project/
 │ └── data_fetcher.py # Shared data access helpers
 ├── requirements.txt # Python dependencies
 └── README.md # Documentation
-
+```
 shell
 Copy code
 
