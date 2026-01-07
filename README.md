@@ -12,6 +12,7 @@ Quant B allows you to:
 ---
 
 ## Project Structure
+```
 quant_b_final/
 ├── app.py # Main Streamlit app
 ├── portfolio_module/
@@ -21,7 +22,7 @@ quant_b_final/
 └── utils/
 ├── data_fetcher.py # Yahoo Finance data
 └── daily_report.py # Daily report (cron)
-
+```
 yaml
 Copy code
 
