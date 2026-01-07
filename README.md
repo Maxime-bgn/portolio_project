@@ -36,6 +36,7 @@ single_asset/
 ├── charts.py       # Fonctions de visualisation
 ├── metrics.py      # Calculs de performance
 └── app.py          # Interface Streamlit
+```
 Lancement :
 
 Bash
@@ -72,12 +73,15 @@ Structure du module
 Plaintext
 
 FinalApp.py             # Interface principale
+```
 portfolio_module/
 ├── portfolio_core.py   # Métriques de base
 ├── advanced_analytics.py # Hurst, variance ratio, régimes
 └── components.py       # Composants UI
 utils/
 └── data_fetcher.py     # Gestion des données Yahoo Finance
+
+```
 Lancement :
 
 Bash
