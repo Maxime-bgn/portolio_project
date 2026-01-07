@@ -23,8 +23,7 @@ quant_b_final/
 ├── data_fetcher.py # Yahoo Finance data
 └── daily_report.py # Daily report (cron)
 ```
-yaml
-Copy code
+
 
 ---
 
