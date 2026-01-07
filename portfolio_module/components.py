@@ -216,11 +216,8 @@ def create_correlation_heatmap(corr_matrix):
         text=np.round(corr_matrix.values, 2),
         texttemplate="%{text}",
         textfont={"size": 10, "color": COLORS["text"]},
-        colorbar=dict(
-            title="",
-            titleside="right",
-            tickfont=dict(size=9)
-        )
+        colorbar=dict(title=dict(text="Correlation")
+)
     ))
     
     fig.update_layout(
