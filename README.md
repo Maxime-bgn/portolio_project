@@ -1,18 +1,23 @@
 # portolio_project
-# Single Asset Strategy Dashboard (Streamlit)
 
-Interactive dashboard to test and compare systematic trading strategies on a single asset.
-
-## Overview
-This app allows you to:
-- Fetch and visualise price data for one ticker
-- Backtest trading strategies
-- Inspect cumulative performance and drawdowns
-- Compare results against Buy & Hold
+Collection of two Streamlit dashboards:
+1) Single Asset Strategy Testing  
+2) Multi-Asset Portfolio Analytics
 
 ---
 
-## Structure
+## Single Asset Strategy Dashboard (Streamlit)
+
+Interactive dashboard to test and compare systematic strategies on a single ticker.
+
+### Overview
+This app allows you to:
+- Fetch and visualise price data
+- Backtest rule-based strategies
+- Evaluate cumulative performance and drawdowns
+- Benchmark against Buy & Hold
+
+### Structure
 single_asset/
 ├── data_fetcher.py # Retrieve historical prices
 ├── strategies.py # Trading strategy implementations
@@ -20,20 +25,20 @@ single_asset/
 ├── metrics.py # Performance metrics (Sharpe, DD, etc.)
 └── app.py # Streamlit frontend
 
-yaml
+bash
 Copy code
 
----
+### Installation
 
-## Installation
-```bash
 pip install streamlit pandas numpy yfinance plotly
 streamlit run single_asset/app.py
 Default URL:
-http://localhost:8501
 
+arduino
+Copy code
+http://localhost:8501
 Included Strategies
-Buy and Hold
+Buy & Hold
 
 End-of-Month
 
@@ -48,7 +53,7 @@ RSI Oversold
 MACD Crossover
 
 Metrics
-Total and annualised return
+Total return / Annualised return
 
 Volatility
 
@@ -59,48 +64,70 @@ Max drawdown
 Recovery time
 
 Notes
-Designed for educational and testing purposes.
-Perfect for analysing behaviour of a single ticker through a variety of rule-based signals.
+Designed for strategy testing and educational purposes.
 
-yaml
-Copy code
+Quant B – Multi-Asset Portfolio Dashboard
+Multi-asset portfolio analytics platform with performance, allocation, and risk diagnostics.
 
----
-
-#  README – **Multi-Asset Portfolio Dashboard** (`FinalApp.py` / `portfolio_module`)
-
-```markdown
-# Quant B – Portfolio Analytics Dashboard (Streamlit)
-
-Multi-asset portfolio analytics platform with performance, risk, allocation, and advanced statistical tools.
-
-## Overview
+Overview
 This dashboard allows you to:
-- Build multi-ticker portfolios
-- Compute performance and risk metrics
-- Analyse drawdowns, correlations, and asset contribution
-- Run advanced regime and volatility diagnostics
 
----
+Build and analyse portfolios
 
-## Structure
-FinalApp.py # Main Streamlit interface
-portfolio_module/
-portfolio_core.py # Core calculations
-advanced_analytics.py # Hurst, variance ratio, regimes
-components.py # UI + charts
-utils/
-data_fetcher.py # Yahoo Finance data
-reports/ # Report outputs (optional)
+Compute risk/return statistics
 
-yaml
+Explore drawdowns and correlations
+
+Run advanced analytics (Hurst, regime detection)
+
+Structure
+bash
 Copy code
-
----
-
-## Installation
-```bash
+FinalApp.py                # Main Streamlit interface
+portfolio_module/
+├── portfolio_core.py      # Core risk/return metrics
+├── advanced_analytics.py  # Hurst, variance ratio, regimes
+└── components.py          # UI + charts
+utils/
+└── data_fetcher.py        # Yahoo Finance data
+reports/                   # Optional generated reports
+Installation
+bash
+Copy code
 pip install streamlit pandas numpy yfinance plotly scipy
 streamlit run FinalApp.py
-Access via:
+Open in browser:
+
+arduino
+Copy code
 http://localhost:8501
+Features
+Performance (base 100)
+
+Allocation by asset
+
+Drawdown curve + statistics
+
+Correlation matrix
+
+Metrics:
+
+Annualised return/volatility
+
+Sharpe, Sortino, Calmar
+
+Max drawdown
+
+VaR, CVaR
+
+Beta/Alpha vs benchmark
+
+Advanced analytics:
+
+Hurst exponent
+
+Multi-timeframe variance
+
+Variance Ratio test
+
+Bull/Bear/Sideways/High Vol regimes
