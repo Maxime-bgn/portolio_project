@@ -1,92 +1,85 @@
-# Portfolio Project
+# Portfolio Project — Streamlit Backtesting App
 
-A univariate backtesting engine for testing quantitative trading strategies on single assets. This project includes data retrieval, signal generation, portfolio simulation, and performance metrics calculation.
-
----
+A single-asset backtesting engine operated through an interactive Streamlit dashboard.  
+The app retrieves market data, generates trading signals, simulates portfolio evolution, and visualizes results directly in the browser.
 
 ## Features
 
-- **Automated Market Data Retrieval** — Fetch historical price data seamlessly
-- **Signal Construction** — Built-in support for momentum, breakout, moving averages, and more
-- **Position Generation** — Automatic trade signal conversion to portfolio positions
-- **PnL Simulation & Equity Curve** — Track portfolio value over time
-- **Performance Metrics** — Calculate Sharpe ratio, maximum drawdown, annualized volatility, and CAGR
-- **Modular Architecture** — Clean separation between utilities, core logic, and components
-
----
+- Automated market data retrieval from online sources
+- Built-in trading strategies (trend following, momentum, breakout, RSI, MACD, etc.)
+- Position and PnL simulation using compounded returns
+- Equity curve and normalized performance comparison
+- Standard performance metrics:
+  - Annualized return
+  - Sharpe ratio
+  - Maximum drawdown
+  - Win rate and profit factor
+- Interactive visualization using Streamlit and Plotly
+- Modular and extensible code structure
 
 ## Project Structure
 ```
 portfolio_project/
 │
-├── app.py                      # Main execution script
-├── portfolio_module/
-│   ├── portfolio_core.py       # Backtesting engine logic
-│   └── components.py           # Generic utility functions
+├── app.py # Streamlit user interface and workflow
+├── single_asset/
+│ ├── strategies.py # Strategy rule definitions
+│ ├── charts.py # Plotting utilities (Plotly)
+│ ├── metrics.py # Performance statistics
+│ ├── data_fetcher.py # Data download and cleaning
+│ └── ...
 ├── utils/
-│   ├── data_fetcher.py         # Data management and retrieval
-│   └── __init__.py
-├── requirements.txt            # Python dependencies
-└── README.md                   # Project documentation
+│ └── data_fetcher.py # Shared data access helpers
+├── requirements.txt # Python dependencies
+└── README.md # Documentation
 ```
-
----
+shell
+Copy code
 
 ## Installation
 
 Clone the repository:
-```bash
 git clone https://github.com/username/portfolio_project.git
 cd portfolio_project
-```
 
-Install dependencies:
-```bash
+csharp
+Copy code
+
+Install required packages:
 pip install -r requirements.txt
-```
 
----
+shell
+Copy code
 
 ## Usage
 
-### Run the Main Script
+Run the Streamlit dashboard:
+streamlit run app.py
 
-Execute the complete backtesting workflow with predefined parameters:
-```bash
-python app.py
-```
+markdown
+Copy code
 
-This script runs a full backtest using the configuration defined in `app.py`.
+From the interface you can:
+- Select an asset ticker
+- Choose the strategy to run
+- Visualize price series, equity curve, and drawdowns
+- Inspect performance statistics
 
----
+No scripting required for basic operation.
 
 ## Customization
 
-Modify backtesting parameters in the following files:
-
-- **`app.py`** — Main execution parameters
-- **`portfolio_module/portfolio_core.py`** — Core backtesting engine logic
-- **`utils/data_fetcher.py`** — Data source configuration
-
----
+Modify functionality as needed:
+- `single_asset/strategies.py` — Add or tune trading strategies
+- `single_asset/metrics.py` — Extend performance measurements
+- `single_asset/charts.py` — Customize plots and layout
+- `single_asset/data_fetcher.py` — Change data source or API logic
+- `app.py` — Add dashboard controls or application flow
 
 ## Roadmap
 
-Future enhancements planned for this project:
-
-- Multi-asset portfolio support
-- Streamlit web interface
-- Automated hyperparameter optimization
-- Transaction costs and slippage modeling
-
----
-
-## License
-
-This project is open source and available under the MIT License.
-
----
-
-## Contributing
-
-Contributions are welcome. Please open an issue or submit a pull request for any improvements or bug fixes.
+Planned future additions:
+- Multi-asset portfolios
+- Hyperparameter optimization
+- Support for transaction costs and slippage
+- Optional deployment templates for cloud hosting
