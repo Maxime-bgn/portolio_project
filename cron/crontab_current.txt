@@ -1,0 +1,1 @@
+0 20 * * * cd /Users/thomasbelleville/Downloads/quant_b_final/portolio_project && /usr/bin/python3 /Users/thomasbelleville/Downloads/quant_b_final/portolio_project/cron/daily_report.py >> /Users/thomasbelleville/Downloads/quant_b_final/portolio_project/cron/logs/cron.log 2>&1
