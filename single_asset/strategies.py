@@ -1,7 +1,8 @@
-#Stratégies de backtesting - Société Générale
+# Stratégies de backtesting - Société Générale
 import pandas as pd
 import numpy as np
 from sklearn.linear_model import LinearRegression
+from sklearn.ensemble import RandomForestClassifier
 
 
 def macd_crossover(data: pd.DataFrame, initial_capital: float = 10000, fast: int = 12, slow: int = 26, signal: int = 9) -> pd.DataFrame:
@@ -19,23 +20,22 @@ def macd_crossover(data: pd.DataFrame, initial_capital: float = 10000, fast: int
         signal: période EMA signal (défaut 9)
     """
     df = data.copy()
-    df['returns'] = df['Close'].pct_change()
+    df["returns"] = df["Close"].pct_change()
     
     # Calcul MACD
-    df['EMA_fast'] = df['Close'].ewm(span=fast, adjust=False).mean()
-    df['EMA_slow'] = df['Close'].ewm(span=slow, adjust=False).mean()
-    df['MACD'] = df['EMA_fast'] - df['EMA_slow']
-    df['MACD_signal'] = df['MACD'].ewm(span=signal, adjust=False).mean()
+    df["EMA_fast"] = df["Close"].ewm(span=fast, adjust=False).mean()
+    df["EMA_slow"] = df["Close"].ewm(span=slow, adjust=False).mean()
+    df["MACD"] = df["EMA_fast"] - df["EMA_slow"]
+    df["MACD_signal"] = df["MACD"].ewm(span=signal, adjust=False).mean()
     
     # Signal : MACD > Signal = achat
-    df['signal'] = (df['MACD'] > df['MACD_signal']).astype(int)
-    df['strategy_returns'] = df['signal'].shift(1) * df['returns']
-    df['cumulative_returns'] = (1 + df['strategy_returns'].fillna(0)).cumprod()
-    df['portfolio_value'] = initial_capital * df['cumulative_returns']
-    df['strategy'] = 'MACD Crossover'
+    df["signal"] = (df["MACD"] > df["MACD_signal"]).astype(int)
+    df["strategy_returns"] = df["signal"].shift(1) * df["returns"]
+    df["cumulative_returns"] = (1 + df["strategy_returns"].fillna(0)).cumprod()
+    df["portfolio_value"] = initial_capital * df["cumulative_returns"]
+    df["strategy"] = "MACD Crossover"
     
     return df
-from sklearn.ensemble import RandomForestClassifier
 
 
 def buy_and_hold(data: pd.DataFrame, initial_capital: float = 10000) -> pd.DataFrame:
@@ -43,10 +43,10 @@ def buy_and_hold(data: pd.DataFrame, initial_capital: float = 10000) -> pd.DataF
     Stratégie Buy and Hold : acheter et conserver.
     """
     df = data.copy()
-    df['returns'] = df['Close'].pct_change()
-    df['cumulative_returns'] = (1 + df['returns']).cumprod()
-    df['portfolio_value'] = initial_capital * df['cumulative_returns']
-    df['strategy'] = 'Buy and Hold'
+    df["returns"] = df["Close"].pct_change()
+    df["cumulative_returns"] = (1 + df["returns"]).cumprod()
+    df["portfolio_value"] = initial_capital * df["cumulative_returns"]
+    df["strategy"] = "Buy and Hold"
     return df
 
 
@@ -55,19 +55,20 @@ def end_of_month(data: pd.DataFrame, initial_capital: float = 10000) -> pd.DataF
     Stratégie End of Month : acheter les 3 derniers jours du mois.
     """
     df = data.copy()
-    df['returns'] = df['Close'].pct_change()
-    df['day_of_month'] = df.index.day
+    df["returns"] = df["Close"].pct_change()
+    df["day_of_month"] = df.index.day
     
-    df['is_month_end'] = df.groupby([df.index.year, df.index.month])['day_of_month'].transform(
+    df["is_month_end"] = df.groupby([df.index.year, df.index.month])["day_of_month"].transform(
         lambda x: x >= x.max() - 2
     )
     
-    df['signal'] = df['is_month_end'].astype(int)
-    df['strategy_returns'] = df['signal'].shift(1) * df['returns']
-    df['cumulative_returns'] = (1 + df['strategy_returns'].fillna(0)).cumprod()
-    df['portfolio_value'] = initial_capital * df['cumulative_returns']
-    df['strategy'] = 'End of Month'
+    df["signal"] = df["is_month_end"].astype(int)
+    df["strategy_returns"] = df["signal"].shift(1) * df["returns"]
+    df["cumulative_returns"] = (1 + df["strategy_returns"].fillna(0)).cumprod()
+    df["portfolio_value"] = initial_capital * df["cumulative_returns"]
+    df["strategy"] = "End of Month"
     return df
+
 
 def volatility_breakout(data: pd.DataFrame, initial_capital: float = 10000, k: float = 0.5) -> pd.DataFrame:
     """
@@ -75,23 +76,21 @@ def volatility_breakout(data: pd.DataFrame, initial_capital: float = 10000, k: f
     Si prix > High veille + k * range veille, on achète le lendemain.
     """
     df = data.copy()
-    df['returns'] = df['Close'].pct_change()
+    df["returns"] = df["Close"].pct_change()
     
-    # Calcul des niveaux de breakout
-    df['prev_range'] = (df['High'] - df['Low']).shift(1)
-    df['prev_high'] = df['High'].shift(1)
-    df['breakout_level'] = df['prev_high'] + k * df['prev_range']
+    df["prev_range"] = (df["High"] - df["Low"]).shift(1)
+    df["prev_high"] = df["High"].shift(1)
+    df["breakout_level"] = df["prev_high"] + k * df["prev_range"]
     
-    # Signal décalé d'un jour pour éviter le forward-looking
-    df['signal'] = (df['High'] > df['breakout_level']).astype(int).shift(1).fillna(0)
+    df["signal"] = (df["High"] > df["breakout_level"]).astype(int).shift(1).fillna(0)
     
-    # Calcul des returns de la stratégie
-    df['strategy_returns'] = df['signal'] * df['returns']
-    df['cumulative_returns'] = (1 + df['strategy_returns'].fillna(0)).cumprod()
-    df['portfolio_value'] = initial_capital * df['cumulative_returns']
-    df['strategy'] = 'Volatility Breakout'
+    df["strategy_returns"] = df["signal"] * df["returns"]
+    df["cumulative_returns"] = (1 + df["strategy_returns"].fillna(0)).cumprod()
+    df["portfolio_value"] = initial_capital * df["cumulative_returns"]
+    df["strategy"] = "Volatility Breakout"
     
     return df
+
 
 def trend_following(data: pd.DataFrame, initial_capital: float = 10000, ma_period: int = 50) -> pd.DataFrame:
     """
@@ -99,14 +98,14 @@ def trend_following(data: pd.DataFrame, initial_capital: float = 10000, ma_perio
     Ultra simple et efficace.
     """
     df = data.copy()
-    df['returns'] = df['Close'].pct_change()
-    df['MA'] = df['Close'].rolling(window=ma_period).mean()
+    df["returns"] = df["Close"].pct_change()
+    df["MA"] = df["Close"].rolling(window=ma_period).mean()
     
-    df['signal'] = (df['Close'] > df['MA']).astype(int)
-    df['strategy_returns'] = df['signal'].shift(1) * df['returns']
-    df['cumulative_returns'] = (1 + df['strategy_returns'].fillna(0)).cumprod()
-    df['portfolio_value'] = initial_capital * df['cumulative_returns']
-    df['strategy'] = 'Trend Following'
+    df["signal"] = (df["Close"] > df["MA"]).astype(int)
+    df["strategy_returns"] = df["signal"].shift(1) * df["returns"]
+    df["cumulative_returns"] = (1 + df["strategy_returns"].fillna(0)).cumprod()
+    df["portfolio_value"] = initial_capital * df["cumulative_returns"]
+    df["strategy"] = "Trend Following"
     return df
 
 
@@ -116,15 +115,15 @@ def golden_cross(data: pd.DataFrame, initial_capital: float = 10000) -> pd.DataF
     Classique institutionnel.
     """
     df = data.copy()
-    df['returns'] = df['Close'].pct_change()
-    df['MA50'] = df['Close'].rolling(window=50).mean()
-    df['MA200'] = df['Close'].rolling(window=200).mean()
+    df["returns"] = df["Close"].pct_change()
+    df["MA50"] = df["Close"].rolling(window=50).mean()
+    df["MA200"] = df["Close"].rolling(window=200).mean()
     
-    df['signal'] = (df['MA50'] > df['MA200']).astype(int)
-    df['strategy_returns'] = df['signal'].shift(1) * df['returns']
-    df['cumulative_returns'] = (1 + df['strategy_returns'].fillna(0)).cumprod()
-    df['portfolio_value'] = initial_capital * df['cumulative_returns']
-    df['strategy'] = 'Golden Cross'
+    df["signal"] = (df["MA50"] > df["MA200"]).astype(int)
+    df["strategy_returns"] = df["signal"].shift(1) * df["returns"]
+    df["cumulative_returns"] = (1 + df["strategy_returns"].fillna(0)).cumprod()
+    df["portfolio_value"] = initial_capital * df["cumulative_returns"]
+    df["strategy"] = "Golden Cross"
     return df
 
 
@@ -133,19 +132,19 @@ def rsi_oversold(data: pd.DataFrame, initial_capital: float = 10000, period: int
     Stratégie RSI Oversold : acheter quand RSI < 30 (survente).
     """
     df = data.copy()
-    df['returns'] = df['Close'].pct_change()
+    df["returns"] = df["Close"].pct_change()
     
-    delta = df['Close'].diff()
+    delta = df["Close"].diff()
     gain = (delta.where(delta > 0, 0)).rolling(window=period).mean()
     loss = (-delta.where(delta < 0, 0)).rolling(window=period).mean()
     rs = gain / loss
-    df['RSI'] = 100 - (100 / (1 + rs))
+    df["RSI"] = 100 - (100 / (1 + rs))
     
-    df['signal'] = (df['RSI'] < oversold).astype(int)
-    df['strategy_returns'] = df['signal'].shift(1) * df['returns']
-    df['cumulative_returns'] = (1 + df['strategy_returns'].fillna(0)).cumprod()
-    df['portfolio_value'] = initial_capital * df['cumulative_returns']
-    df['strategy'] = 'RSI Oversold'
+    df["signal"] = (df["RSI"] < oversold).astype(int)
+    df["strategy_returns"] = df["signal"].shift(1) * df["returns"]
+    df["cumulative_returns"] = (1 + df["strategy_returns"].fillna(0)).cumprod()
+    df["portfolio_value"] = initial_capital * df["cumulative_returns"]
+    df["strategy"] = "RSI Oversold"
     return df
 
 
@@ -161,34 +160,30 @@ def linear_regression_strategy(data: pd.DataFrame, initial_capital: float = 1000
         lookback: nombre de jours pour entraîner le modèle (défaut 20)
     """
     df = data.copy()
-    df['returns'] = df['Close'].pct_change()
-    df['signal'] = 0
-    df['predicted'] = np.nan
+    df["returns"] = df["Close"].pct_change()
+    df["signal"] = 0
+    df["predicted"] = np.nan
     
-    prices = df['Close'].values
+    prices = df["Close"].values
     
     for i in range(lookback, len(df)):
-        # Données d'entraînement : lookback jours précédents
         X_train = np.arange(lookback).reshape(-1, 1)
         y_train = prices[i-lookback:i]
         
-        # Entraîner le modèle
         model = LinearRegression()
         model.fit(X_train, y_train)
         
-        # Prédire le prochain jour
         X_pred = np.array([[lookback]])
         predicted_price = model.predict(X_pred)[0]
         
-        df.iloc[i, df.columns.get_loc('predicted')] = predicted_price
+        df.iloc[i, df.columns.get_loc("predicted")] = predicted_price
         
-        # Signal : prix prédit > prix actuel → achat
         if predicted_price > prices[i]:
-            df.iloc[i, df.columns.get_loc('signal')] = 1
+            df.iloc[i, df.columns.get_loc("signal")] = 1
     
-    df['strategy_returns'] = df['signal'].shift(1) * df['returns']
-    df['cumulative_returns'] = (1 + df['strategy_returns'].fillna(0)).cumprod()
-    df['portfolio_value'] = initial_capital * df['cumulative_returns']
-    df['strategy'] = 'Linear Regression'
+    df["strategy_returns"] = df["signal"].shift(1) * df["returns"]
+    df["cumulative_returns"] = (1 + df["strategy_returns"].fillna(0)).cumprod()
+    df["portfolio_value"] = initial_capital * df["cumulative_returns"]
+    df["strategy"] = "Linear Regression"
     
     return df
