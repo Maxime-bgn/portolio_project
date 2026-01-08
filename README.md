@@ -11,7 +11,7 @@ This app allows you to:
 - Compare results against Buy & Hold
 
 ---
-
+```
 ## Structure
 single_asset/
 ├── data_fetcher.py # Retrieve historical prices
@@ -19,14 +19,14 @@ single_asset/
 ├── charts.py # Plotting functions
 ├── metrics.py # Performance metrics (Sharpe, DD, etc.)
 └── app.py # Streamlit frontend
-
+```
 yaml
 Copy code
 
 ---
 
 ## Installation
-```bash
+bash
 pip install streamlit pandas numpy yfinance plotly
 streamlit run single_asset/app.py
 Default URL:
